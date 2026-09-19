@@ -1,18 +1,20 @@
+import os
 import streamlit as st
 from estado import fazer_login
 
 
 def pagina_login():
-    # Ajusta as proporções das colunas para centralizar melhor o conteúdo na tela
     col_esq, col_meio, col_dir = st.columns([1, 2, 1])
 
     with col_meio:
-        # Cabeçalho com Logo "As Branquelas" e Imagem alinhados no canto superior esquerdo
         col_img, col_txt = st.columns([0.2, 0.8], vertical_alignment="center")
         
         with col_img:
-           
-            st.image("logo.png", width=50)
+            caminho_logo = "assets/logo.jpg"
+            if os.path.exists(caminho_logo):
+                st.image(caminho_logo, width=50)
+            else:
+                st.warning("Logo não encontrada")
             
         with col_txt:
             st.markdown(
