@@ -3,10 +3,24 @@ from estado import fazer_login
 
 
 def pagina_login():
-    col_esq, col_meio, col_dir = st.columns([1, 1.4, 1])
+    # Ajusta as proporções das colunas para centralizar melhor o conteúdo na tela
+    col_esq, col_meio, col_dir = st.columns([1, 2, 1])
 
     with col_meio:
-        st.markdown('<div class="titulo">🏢 Reserva de Salas</div>', unsafe_allow_html=True)
+        # Cabeçalho com Logo "As Branquelas" e Imagem alinhados no canto superior esquerdo
+        col_img, col_txt = st.columns([0.2, 0.8], vertical_alignment="center")
+        
+        with col_img:
+           
+            st.image("logo.png", width=50)
+            
+        with col_txt:
+            st.markdown(
+                '<h2 style="margin: 0; font-size: 24px; font-weight: bold; color: #1e293b;">As Branquelas</h2>', 
+                unsafe_allow_html=True
+            )
+
+        st.markdown('<div class="titulo" style="margin-top: 10px;">🏢 Reserva de Salas</div>', unsafe_allow_html=True)
         st.markdown(
             '<div class="subtitulo">Entre com sua conta de Locatário ou Proprietário.</div>',
             unsafe_allow_html=True,
