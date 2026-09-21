@@ -1,8 +1,15 @@
 from datetime import date, time
 import streamlit as st
 
-from estado import sala_por_id, reservas_de, salas_de, reservas_das_salas, adicionar_sala
+from estado import (
+    sala_por_id, reservas_de, salas_de, reservas_das_salas, adicionar_sala,
+    listar_usuarios_admin, alterar_tipo_usuario_admin,
+    confirmar_email_manualmente_admin, excluir_usuario_admin,
+    desativar_usuario_admin, ativar_usuario_admin,
+    TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN,
+)
 from componentes import render_card, render_secao_titulo, render_lista_reservas, render_sala_card
+from autorizacao import exigir_tipo
 
 
 # ==========================================
@@ -10,6 +17,8 @@ from componentes import render_card, render_secao_titulo, render_lista_reservas,
 # ==========================================
 
 def pagina_dashboard_locatario(usuario):
+    exigir_tipo(usuario, [TIPO_LOCATARIO])
+
     st.markdown(f'<div class="titulo">Olá, {usuario["nome"].split()[0]}! 👋</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitulo">Encontre uma sala para o seu próximo compromisso.</div>', unsafe_allow_html=True)
 
@@ -55,6 +64,8 @@ def pagina_dashboard_locatario(usuario):
 
 
 def pagina_buscar_salas(usuario):
+    exigir_tipo(usuario, [TIPO_LOCATARIO])
+
     st.markdown('<div class="titulo">Buscar Salas 🔎</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitulo">Filtre por data, horário e capacidade.</div>', unsafe_allow_html=True)
 
@@ -97,12 +108,16 @@ def pagina_buscar_salas(usuario):
 
 
 def pagina_minhas_reservas(usuario):
+    exigir_tipo(usuario, [TIPO_LOCATARIO])
+
     st.markdown('<div class="titulo">Minhas Reservas 📅</div>', unsafe_allow_html=True)
     render_secao_titulo("📋 Todas as suas reservas")
     render_lista_reservas(reservas_de(usuario["nome"]))
 
 
 def pagina_favoritos(usuario):
+    exigir_tipo(usuario, [TIPO_LOCATARIO])
+
     st.markdown('<div class="titulo">Favoritos ❤️</div>', unsafe_allow_html=True)
     favoritas = [s for s in st.session_state.salas if s["id"] in st.session_state.favoritos]
 
@@ -117,6 +132,8 @@ def pagina_favoritos(usuario):
 
 
 def pagina_perfil(usuario):
+    exigir_tipo(usuario, [TIPO_LOCATARIO])
+
     st.markdown('<div class="titulo">Meu Perfil 👤</div>', unsafe_allow_html=True)
     render_secao_titulo("Dados do usuário")
     st.write(f"**Nome:** {usuario['nome']}")
@@ -130,6 +147,8 @@ def pagina_perfil(usuario):
 # ==========================================
 
 def pagina_dashboard_proprietario(usuario):
+    exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
+
     st.markdown(f'<div class="titulo">Olá, {usuario["nome"].split()[0]}! 👋</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitulo">Acompanhe suas salas e reservas.</div>', unsafe_allow_html=True)
 
@@ -205,6 +224,8 @@ def pagina_dashboard_proprietario(usuario):
 
 
 def pagina_minhas_salas(usuario):
+    exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
+
     st.markdown('<div class="titulo">Minhas Salas 🏢</div>', unsafe_allow_html=True)
     render_secao_titulo("Salas cadastradas por você")
 
@@ -227,6 +248,8 @@ def pagina_minhas_salas(usuario):
 
 
 def pagina_perfil_proprietario(usuario):
+    exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
+
     st.markdown('<div class="titulo">Meu Perfil 👤</div>', unsafe_allow_html=True)
     render_secao_titulo("Dados do usuário")
     st.write(f"**Nome:** {usuario['nome']}")
@@ -235,10 +258,75 @@ def pagina_perfil_proprietario(usuario):
 
 
 # ==========================================
-# ROTEAMENTO
+# PÁGINAS - ADMINISTRADOR
 # ==========================================
-# app.py chama render_pagina(pagina, usuario) a cada rerun,
-# repassando o que foi escolhido no menu lateral.
+
+def pagina_admin(usuario):
+    exigir_tipo(usuario, [TIPO_ADMIN])
+
+    st.markdown('<div class="titulo">Administração 🛠️</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="subtitulo">Gerencie as contas cadastradas no sistema.</div>',
+        unsafe_allow_html=True,
+    )
+
+    usuarios = listar_usuarios_admin()
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        render_card("👥 Total de contas", len(usuarios), "No sistema")
+    with col2:
+        confirmadas = len([u for u in usuarios if u["email_confirmado"]])
+        render_card("✅ E-mails confirmados", confirmadas, f"de {len(usuarios)}")
+    with col3:
+        admins = len([u for u in usuarios if u["tipo"] == TIPO_ADMIN])
+        render_card("🛠️ Administradores", admins, "Contas com acesso total")
+
+    render_secao_titulo("👥 Contas cadastradas")
+
+    for dados in usuarios:
+        cols = st.columns([2, 2, 1.2, 1.2, 1.2, 1, 1])
+        with cols[0]:
+            st.write(f"**{dados['nome_completo'] or dados['nome_usuario']}**")
+            st.caption(f"@{dados['nome_usuario']}")
+        with cols[1]:
+            st.write(dados["email"])
+        with cols[2]:
+            st.write("✅ Confirmado" if dados["email_confirmado"] else "⏳ Pendente")
+            st.caption("🔓 Ativo" if dados["ativo"] else "🔒 Bloqueado")
+        with cols[3]:
+            novo_tipo = st.selectbox(
+                "Tipo", [TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN],
+                index=[TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN].index(dados["tipo"]),
+                key=f"tipo_{dados['id']}", label_visibility="collapsed",
+            )
+            if novo_tipo != dados["tipo"]:
+                alterar_tipo_usuario_admin(dados["id"], novo_tipo)
+                st.rerun()
+        with cols[4]:
+            if not dados["email_confirmado"]:
+                if st.button("Confirmar", key=f"confirmar_{dados['id']}"):
+                    confirmar_email_manualmente_admin(dados["id"])
+                    st.rerun()
+        with cols[5]:
+            if dados["id"] != usuario["id"]:
+                if dados["ativo"]:
+                    if st.button("🔒 Bloquear", key=f"bloquear_{dados['id']}"):
+                        desativar_usuario_admin(dados["id"])
+                        st.rerun()
+                else:
+                    if st.button("🔓 Reativar", key=f"reativar_{dados['id']}"):
+                        ativar_usuario_admin(dados["id"])
+                        st.rerun()
+        with cols[6]:
+            if dados["id"] != usuario["id"]:
+                if st.button("🗑️", key=f"excluir_{dados['id']}"):
+                    excluir_usuario_admin(dados["id"])
+                    st.rerun()
+        st.divider()
+
+
+
 
 PAGINAS_LOCATARIO = {
     "🏠 Dashboard": pagina_dashboard_locatario,
@@ -254,16 +342,28 @@ PAGINAS_PROPRIETARIO = {
     "👤 Perfil": pagina_perfil_proprietario,
 }
 
+# O administrador tem acesso total: todas as páginas de proprietário
+# (para poder gerenciar salas do sistema) mais o painel de contas.
+PAGINAS_ADMIN = {
+    **PAGINAS_PROPRIETARIO,
+    "🛠️ Administração": pagina_admin,
+}
+
+PAGINAS_POR_TIPO = {
+    TIPO_LOCATARIO: PAGINAS_LOCATARIO,
+    TIPO_PROPRIETARIO: PAGINAS_PROPRIETARIO,
+    TIPO_ADMIN: PAGINAS_ADMIN,
+}
+
 
 def menu_para(tipo_usuario):
     """app.py usa isso para saber quais itens mostrar no menu,
-    já que Locatário e Proprietário têm páginas diferentes."""
-    if tipo_usuario == "Locatário":
-        return list(PAGINAS_LOCATARIO.keys())
-    return list(PAGINAS_PROPRIETARIO.keys())
+    já que cada tipo de conta tem páginas diferentes."""
+    paginas = PAGINAS_POR_TIPO.get(tipo_usuario, PAGINAS_LOCATARIO)
+    return list(paginas.keys())
 
 
 def render_pagina(pagina, usuario):
-    paginas = PAGINAS_LOCATARIO if usuario["tipo"] == "Locatário" else PAGINAS_PROPRIETARIO
-    funcao = paginas.get(pagina, paginas["🏠 Dashboard"])
+    paginas = PAGINAS_POR_TIPO.get(usuario["tipo"], PAGINAS_LOCATARIO)
+    funcao = paginas.get(pagina, next(iter(paginas.values())))
     funcao(usuario)
