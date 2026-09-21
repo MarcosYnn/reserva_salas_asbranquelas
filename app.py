@@ -4,7 +4,7 @@ try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-    pass  # python-dotenv nÃ£o instalado: use variÃ¡veis de ambiente do sistema
+    pass  # python-dotenv nao instalado: use variaveis de ambiente do sistema
 
 from utils.estado import (
     inicializar_estado, usuario_logado, fazer_logout,
@@ -31,9 +31,9 @@ inicializar_estado()
 
 # ==========================================
 # LINKS RECEBIDOS POR E-MAIL
-# Streamlit nÃ£o tem rotas de verdade â€” os links de confirmaÃ§Ã£o e de
-# redefiniÃ§Ã£o de senha chegam como parÃ¢metros na prÃ³pria URL do app
-# (?confirmar=TOKEN ou ?redefinir=TOKEN) e sÃ£o tratados aqui, antes
+# Streamlit não tem rotas de verdade — os links de confirmação e de
+# redefiniçåo de senha chegam como parametros na propria URL do app
+# (?confirmar=TOKEN ou ?redefinir=TOKEN) e são tratados aqui, antes
 # de qualquer outra coisa, tanto logado quanto deslogado.
 # ==========================================
 
@@ -48,7 +48,7 @@ if token_confirmacao:
         st.success(mensagem)
     else:
         st.error(mensagem)
-    st.info("VocÃª jÃ¡ pode ir para a aba **Entrar** para acessar sua conta.")
+    st.info("Voce ja pode ir para a aba **Entrar** para acessar sua conta.")
     pagina_login()
     st.stop()
 
@@ -57,7 +57,7 @@ if token_redefinicao:
     with st.form("form_redefinir_senha"):
         nova_senha = st.text_input("Nova senha", type="password")
         confirmar_nova_senha = st.text_input("Confirme a nova senha", type="password")
-        st.caption("A senha deve ter 8+ caracteres, com maiÃºscula, minÃºscula e nÃºmero.")
+        st.caption("A senha deve ter 8+ caracteres, com maiuscula, minúscula e número.")
         redefinir = st.form_submit_button("Redefinir senha", type="primary")
 
     if redefinir:
@@ -67,7 +67,7 @@ if token_redefinicao:
         if sucesso:
             st.query_params.clear()
             st.success(mensagem)
-            st.info("VocÃª jÃ¡ pode ir para a aba **Entrar** para acessar sua conta.")
+            st.info("Voce ja pode ir para a aba **Entrar** para acessar sua conta.")
             pagina_login()
         else:
             st.error(mensagem)
@@ -77,7 +77,7 @@ usuario = usuario_logado()
 
 # ==========================================
 # GATE DE LOGIN
-# Sem usuÃ¡rio logado, nem a sidebar nem o conteÃºdo aparecem.
+# Sem usuario logado, nem a sidebar nem o conteúdo aparecem.
 # ==========================================
 
 if usuario is None:
@@ -85,7 +85,7 @@ if usuario is None:
     st.stop()
 
 # ==========================================
-# SIDEBAR (sÃ³ Ã© montada com usuÃ¡rio autenticado)
+# SIDEBAR (só é montada com usuario autenticado)
 # ==========================================
 
 with st.sidebar:
@@ -99,7 +99,7 @@ with st.sidebar:
     st.markdown("### Menu")
 
     pagina = st.radio(
-        "NavegaÃ§Ã£o",
+        "Navegação",
         main.menu_para(usuario["tipo"]),
         label_visibility="collapsed",
     )
@@ -111,7 +111,7 @@ with st.sidebar:
 
 
 # ==========================================
-# CONTEÃšDO PRINCIPAL
+# CONTEÚDO PRINCIPAL
 # ==========================================
 
 main.render_pagina(pagina, usuario)
