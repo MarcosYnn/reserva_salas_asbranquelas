@@ -199,7 +199,7 @@ def cadastrar_usuario(nome_usuario, email, nome_completo, senha, confirmar_senha
     except sqlite3.IntegrityError:
         # ProteÃ§Ã£o extra caso duas tentativas cheguem ao mesmo tempo â€”
         # a restriÃ§Ã£o UNIQUE do banco garante que nunca haverÃ¡ duplicata.
-        return False, "Nome de usuÃ¡rio ou e-mail jÃ¡ cadastrado."
+        return False, "Nome de usuário ou e-mail já cadastrado."
 
     enviado_por_smtp = auth.enviar_email_confirmacao(email, nome_usuario, token)
     if enviado_por_smtp:
@@ -211,7 +211,7 @@ def cadastrar_usuario(nome_usuario, email, nome_completo, senha, confirmar_senha
 
 
 def fazer_login(identificador, senha):
-    """identificador pode ser nome de usuÃ¡rio OU e-mail.
+    """identificador pode ser nome de usuário OU e-mail.
     Retorna (sucesso: bool, mensagem: str)."""
 
     identificador = (identificador or "").strip()
@@ -220,7 +220,7 @@ def fazer_login(identificador, senha):
     # Mensagem genÃ©rica em ambos os casos (usuÃ¡rio inexistente ou
     # senha errada) para nÃ£o revelar se um usuÃ¡rio existe ou nÃ£o.
     if not usuario_db or not auth.verificar_senha(senha or "", usuario_db["senha_hash"], usuario_db["salt"]):
-        return False, "UsuÃ¡rio/e-mail ou senha invÃ¡lidos."
+        return False, "Usuário/e-mail ou senha inválidos."
 
     if not usuario_db["email_confirmado"]:
         return False, "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada."
@@ -237,10 +237,10 @@ def fazer_logout():
 
 
 def confirmar_email_via_token(token):
-    """Usado quando o usuÃ¡rio abre o link recebido por e-mail.
+    """Usado quando o usuário abre o link recebido por e-mail.
     Retorna (sucesso: bool, mensagem: str)."""
     if not token:
-        return False, "Link de confirmaÃ§Ã£o invÃ¡lido."
+        return False, "Link de confirmação inválido."
 
     usuario_db = db.buscar_usuario_por_token_confirmacao(token)
     if not usuario_db:
@@ -251,31 +251,31 @@ def confirmar_email_via_token(token):
 
 
 def solicitar_redefinicao_senha(email):
-    """Gera um token de redefiniÃ§Ã£o e envia por e-mail.
+    """Gera um token de redefinição e envia por e-mail.
     Retorna (sucesso: bool, mensagem: str)."""
     email = (email or "").strip().lower()
     usuario_db = db.buscar_usuario_por_email(email)
     if not usuario_db:
-        return False, "NÃ£o encontramos nenhuma conta com esse e-mail."
+        return False, "Não encontramos nenhuma conta com esse e-mail."
 
     token = auth.gerar_token()
     db.definir_token_redefinicao(usuario_db["id"], token)
     auth.enviar_email_redefinicao(email, usuario_db["nome_usuario"], token)
-    return True, "Se o e-mail existir, enviamos um link de redefiniÃ§Ã£o de senha."
+    return True, "Se o e-mail existir, enviamos um link de redefinição de senha."
 
 
 def redefinir_senha_via_token(token, nova_senha, confirmar_nova_senha):
-    """Usado na tela acessada pelo link de redefiniÃ§Ã£o.
+    """Usado na tela acessada pelo link de redefinição.
     Retorna (sucesso: bool, mensagem: str)."""
     if not token:
-        return False, "Link de redefiniÃ§Ã£o invÃ¡lido."
+        return False, "Link de redefinição inválido."
 
     usuario_db = db.buscar_usuario_por_token_redefinicao(token)
     if not usuario_db:
-        return False, "Link de redefiniÃ§Ã£o invÃ¡lido ou jÃ¡ utilizado."
+        return False, "Link de redefinição inválido ou já utilizado."
 
     if nova_senha != confirmar_nova_senha:
-        return False, "As senhas nÃ£o coincidem."
+        return False, "As senhas não coincidem."
 
     senha_ok, mensagem_senha = auth.validar_senha_forte(nova_senha)
     if not senha_ok:
