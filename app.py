@@ -1,27 +1,27 @@
-import streamlit as st
+﻿import streamlit as st
 
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-    pass  # python-dotenv não instalado: use variáveis de ambiente do sistema
+    pass  # python-dotenv nÃ£o instalado: use variÃ¡veis de ambiente do sistema
 
-from estado import (
+from utils.estado import (
     inicializar_estado, usuario_logado, fazer_logout,
     confirmar_email_via_token, redefinir_senha_via_token,
 )
-from componentes import injetar_css
-from login import pagina_login
+from utils.componentes import injetar_css
+from views.login_view import pagina_login
 import main
 
 
 # ==========================================
-# CONFIGURAÇÃO DA PÁGINA
+# CONFIGURAÃ‡ÃƒO DA PÃGINA
 # ==========================================
 
 st.set_page_config(
     page_title="Reserva de Salas",
-    page_icon="🏢",
+    page_icon="ðŸ¢",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -31,9 +31,9 @@ inicializar_estado()
 
 # ==========================================
 # LINKS RECEBIDOS POR E-MAIL
-# Streamlit não tem rotas de verdade — os links de confirmação e de
-# redefinição de senha chegam como parâmetros na própria URL do app
-# (?confirmar=TOKEN ou ?redefinir=TOKEN) e são tratados aqui, antes
+# Streamlit nÃ£o tem rotas de verdade â€” os links de confirmaÃ§Ã£o e de
+# redefiniÃ§Ã£o de senha chegam como parÃ¢metros na prÃ³pria URL do app
+# (?confirmar=TOKEN ou ?redefinir=TOKEN) e sÃ£o tratados aqui, antes
 # de qualquer outra coisa, tanto logado quanto deslogado.
 # ==========================================
 
@@ -48,16 +48,16 @@ if token_confirmacao:
         st.success(mensagem)
     else:
         st.error(mensagem)
-    st.info("Você já pode ir para a aba **Entrar** para acessar sua conta.")
+    st.info("VocÃª jÃ¡ pode ir para a aba **Entrar** para acessar sua conta.")
     pagina_login()
     st.stop()
 
 if token_redefinicao:
-    st.markdown('<div class="titulo">🔑 Redefinir senha</div>', unsafe_allow_html=True)
+    st.markdown('<div class="titulo">ðŸ”‘ Redefinir senha</div>', unsafe_allow_html=True)
     with st.form("form_redefinir_senha"):
         nova_senha = st.text_input("Nova senha", type="password")
         confirmar_nova_senha = st.text_input("Confirme a nova senha", type="password")
-        st.caption("A senha deve ter 8+ caracteres, com maiúscula, minúscula e número.")
+        st.caption("A senha deve ter 8+ caracteres, com maiÃºscula, minÃºscula e nÃºmero.")
         redefinir = st.form_submit_button("Redefinir senha", type="primary")
 
     if redefinir:
@@ -67,7 +67,7 @@ if token_redefinicao:
         if sucesso:
             st.query_params.clear()
             st.success(mensagem)
-            st.info("Você já pode ir para a aba **Entrar** para acessar sua conta.")
+            st.info("VocÃª jÃ¡ pode ir para a aba **Entrar** para acessar sua conta.")
             pagina_login()
         else:
             st.error(mensagem)
@@ -77,7 +77,7 @@ usuario = usuario_logado()
 
 # ==========================================
 # GATE DE LOGIN
-# Sem usuário logado, nem a sidebar nem o conteúdo aparecem.
+# Sem usuÃ¡rio logado, nem a sidebar nem o conteÃºdo aparecem.
 # ==========================================
 
 if usuario is None:
@@ -85,33 +85,34 @@ if usuario is None:
     st.stop()
 
 # ==========================================
-# SIDEBAR (só é montada com usuário autenticado)
+# SIDEBAR (sÃ³ Ã© montada com usuÃ¡rio autenticado)
 # ==========================================
 
 with st.sidebar:
-    st.markdown("## 🏢 Reserva de Salas")
+    st.markdown("## ðŸ¢ Reserva de Salas")
     st.divider()
 
-    st.markdown(f"### 👤 {usuario['nome']}")
+    st.markdown(f"### ðŸ‘¤ {usuario['nome']}")
     st.caption(f"Conta de {usuario['tipo']}")
 
     st.divider()
     st.markdown("### Menu")
 
     pagina = st.radio(
-        "Navegação",
+        "NavegaÃ§Ã£o",
         main.menu_para(usuario["tipo"]),
         label_visibility="collapsed",
     )
 
     st.divider()
-    if st.button("🚪 Sair"):
+    if st.button("ðŸšª Sair"):
         fazer_logout()
         st.rerun()
 
 
 # ==========================================
-# CONTEÚDO PRINCIPAL
+# CONTEÃšDO PRINCIPAL
 # ==========================================
 
 main.render_pagina(pagina, usuario)
+

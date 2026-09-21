@@ -1,5 +1,5 @@
-import streamlit as st
-from estado import sala_por_id
+﻿import streamlit as st
+from utils.estado import sala_por_id
 
 
 def injetar_css():
@@ -100,10 +100,10 @@ def render_sala_card(sala, coluna, contexto, usuario_atual_nome):
         favoritada = sala["id"] in st.session_state.favoritos
         st.markdown(f"""
         <div class="sala">
-            <div class="sala-titulo">🏢 {sala['nome']}</div>
-            <div class="sala-info">👥 Capacidade: {sala['capacidade']} pessoas</div>
-            <div class="sala-info">🖥️ {sala['recursos']}</div>
-            <div class="sala-info">📍 {sala['andar']}</div>
+            <div class="sala-titulo">ðŸ¢ {sala['nome']}</div>
+            <div class="sala-info">ðŸ‘¥ Capacidade: {sala['capacidade']} pessoas</div>
+            <div class="sala-info">ðŸ–¥ï¸ {sala['recursos']}</div>
+            <div class="sala-info">ðŸ“ {sala['andar']}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -119,10 +119,11 @@ def render_sala_card(sala, coluna, contexto, usuario_atual_nome):
                 })
                 st.success(f"{sala['nome']} reservada! Veja em 'Minhas Reservas'.")
         with col_fav:
-            rotulo = "💛" if favoritada else "🤍"
+            rotulo = "ðŸ’›" if favoritada else "ðŸ¤"
             if st.button(rotulo, key=f"fav_{contexto}_{sala['id']}"):
                 if favoritada:
                     st.session_state.favoritos.discard(sala["id"])
                 else:
                     st.session_state.favoritos.add(sala["id"])
                 st.rerun()
+

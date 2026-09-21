@@ -1,37 +1,37 @@
-import os
+﻿import os
 import sqlite3
 from datetime import datetime
 
 import streamlit as st
 
-import database as db
-import auth
+from models import database as db
+from controllers import auth_controller as auth
 
 
 # ==========================================
 # TIPOS DE CONTA
 # ==========================================
-TIPO_LOCATARIO = "Locatário"
-TIPO_PROPRIETARIO = "Proprietário"
+TIPO_LOCATARIO = "LocatÃ¡rio"
+TIPO_PROPRIETARIO = "ProprietÃ¡rio"
 TIPO_ADMIN = "Administrador"
 
 # ==========================================
-# ADMIN PADRÃO (pronto para uso, sem precisar configurar nada)
+# ADMIN PADRÃƒO (pronto para uso, sem precisar configurar nada)
 # ==========================================
-# Se as variáveis de ambiente ADMIN_USERNAME/ADMIN_EMAIL/ADMIN_PASSWORD
-# não estiverem definidas, o sistema cria automaticamente esta conta na
-# primeira execução. Para um projeto em produção, defina essas 3
-# variáveis (no .env ou no ambiente do servidor) com valores próprios —
-# elas sempre têm prioridade sobre estes valores padrão.
+# Se as variÃ¡veis de ambiente ADMIN_USERNAME/ADMIN_EMAIL/ADMIN_PASSWORD
+# nÃ£o estiverem definidas, o sistema cria automaticamente esta conta na
+# primeira execuÃ§Ã£o. Para um projeto em produÃ§Ã£o, defina essas 3
+# variÃ¡veis (no .env ou no ambiente do servidor) com valores prÃ³prios â€”
+# elas sempre tÃªm prioridade sobre estes valores padrÃ£o.
 ADMIN_USUARIO_PADRAO = "admin"
 ADMIN_EMAIL_PADRAO = "admin@escritorio.com"
-ADMIN_SENHA_PADRAO = "Admin@123"  # precisa de maiúscula+minúscula+número (regra de senha forte)
+ADMIN_SENHA_PADRAO = "Admin@123"  # precisa de maiÃºscula+minÃºscula+nÃºmero (regra de senha forte)
 
-# O database.py não tem coluna "proprietario" na tabela salas, então
-# não dá pra persistir o dono de cada sala no banco sem alterá-lo
-# (isso foi mantido de propósito da etapa anterior). Como hoje só
-# existe uma conta de Proprietário de demonstração (ana), usamos ela
-# como dono padrão de qualquer sala sem dono registrado nesta sessão.
+# O database.py nÃ£o tem coluna "proprietario" na tabela salas, entÃ£o
+# nÃ£o dÃ¡ pra persistir o dono de cada sala no banco sem alterÃ¡-lo
+# (isso foi mantido de propÃ³sito da etapa anterior). Como hoje sÃ³
+# existe uma conta de ProprietÃ¡rio de demonstraÃ§Ã£o (ana), usamos ela
+# como dono padrÃ£o de qualquer sala sem dono registrado nesta sessÃ£o.
 PROPRIETARIO_PADRAO = "ana"
 
 MAPA_RECURSOS = [
@@ -45,7 +45,7 @@ MAPA_RECURSOS = [
 
 
 # ==========================================
-# SALAS (mesma lógica já usada antes, sem mudanças de comportamento)
+# SALAS (mesma lÃ³gica jÃ¡ usada antes, sem mudanÃ§as de comportamento)
 # ==========================================
 
 def _linha_sala_para_dict(linha):
@@ -63,7 +63,7 @@ def _linha_sala_para_dict(linha):
         "ar_condicionado": ar_condicionado,
     }
 
-    recursos = " • ".join(
+    recursos = " â€¢ ".join(
         rotulo for chave, rotulo in MAPA_RECURSOS if flags[chave]
     ) or "Sem recursos cadastrados"
 
@@ -117,8 +117,8 @@ def salas_de(proprietario_login):
 
 
 # ==========================================
-# RESERVAS (segue em memória — o database.py não tem tabela de
-# reservas; fora do escopo desta tarefa de autenticação)
+# RESERVAS (segue em memÃ³ria â€” o database.py nÃ£o tem tabela de
+# reservas; fora do escopo desta tarefa de autenticaÃ§Ã£o)
 # ==========================================
 
 def reservas_de(cliente_nome):
@@ -130,13 +130,13 @@ def reservas_das_salas(sala_ids):
 
 
 # ==========================================
-# SESSÃO / AUTENTICAÇÃO
+# SESSÃƒO / AUTENTICAÃ‡ÃƒO
 # ==========================================
 
 def _usuario_db_para_sessao(usuario_db):
-    """Converte a linha de usuário do banco no dicionário que o
-    resto do app usa em st.session_state.usuario. Mantém as chaves
-    "login", "nome" e "tipo" que main.py/componentes.py já esperam."""
+    """Converte a linha de usuÃ¡rio do banco no dicionÃ¡rio que o
+    resto do app usa em st.session_state.usuario. MantÃ©m as chaves
+    "login", "nome" e "tipo" que main.py/componentes.py jÃ¡ esperam."""
     return {
         "id": usuario_db["id"],
         "login": usuario_db["nome_usuario"],
@@ -152,8 +152,8 @@ def usuario_logado():
 
 
 def cadastrar_usuario(nome_usuario, email, nome_completo, senha, confirmar_senha, tipo=TIPO_LOCATARIO):
-    """Valida e cria uma nova conta (não confirmada) e dispara o
-    e-mail de confirmação. Retorna (sucesso: bool, mensagem: str)."""
+    """Valida e cria uma nova conta (nÃ£o confirmada) e dispara o
+    e-mail de confirmaÃ§Ã£o. Retorna (sucesso: bool, mensagem: str)."""
 
     nome_usuario = (nome_usuario or "").strip()
     email = (email or "").strip().lower()
@@ -163,23 +163,23 @@ def cadastrar_usuario(nome_usuario, email, nome_completo, senha, confirmar_senha
         return False, "Preencha todos os campos."
 
     if not auth.validar_nome_usuario(nome_usuario):
-        return False, "Nome de usuário inválido: use de 3 a 30 letras, números, ponto ou underline."
+        return False, "Nome de usuÃ¡rio invÃ¡lido: use de 3 a 30 letras, nÃºmeros, ponto ou underline."
 
     if not auth.validar_email(email):
-        return False, "Informe um e-mail válido."
+        return False, "Informe um e-mail vÃ¡lido."
 
     if senha != confirmar_senha:
-        return False, "As senhas não coincidem."
+        return False, "As senhas nÃ£o coincidem."
 
     senha_ok, mensagem_senha = auth.validar_senha_forte(senha)
     if not senha_ok:
         return False, mensagem_senha
 
     if db.buscar_usuario_por_nome(nome_usuario):
-        return False, "Esse nome de usuário já está em uso."
+        return False, "Esse nome de usuÃ¡rio jÃ¡ estÃ¡ em uso."
 
     if db.buscar_usuario_por_email(email):
-        return False, "Já existe uma conta cadastrada com esse e-mail."
+        return False, "JÃ¡ existe uma conta cadastrada com esse e-mail."
 
     senha_hash, salt = auth.gerar_hash_senha(senha)
     token = auth.gerar_token()
@@ -197,30 +197,30 @@ def cadastrar_usuario(nome_usuario, email, nome_completo, senha, confirmar_senha
             email_confirmado=False,
         )
     except sqlite3.IntegrityError:
-        # Proteção extra caso duas tentativas cheguem ao mesmo tempo —
-        # a restrição UNIQUE do banco garante que nunca haverá duplicata.
-        return False, "Nome de usuário ou e-mail já cadastrado."
+        # ProteÃ§Ã£o extra caso duas tentativas cheguem ao mesmo tempo â€”
+        # a restriÃ§Ã£o UNIQUE do banco garante que nunca haverÃ¡ duplicata.
+        return False, "Nome de usuÃ¡rio ou e-mail jÃ¡ cadastrado."
 
     enviado_por_smtp = auth.enviar_email_confirmacao(email, nome_usuario, token)
     if enviado_por_smtp:
-        return True, "Conta criada! Enviamos um e-mail de confirmação — confirme para poder entrar."
+        return True, "Conta criada! Enviamos um e-mail de confirmaÃ§Ã£o â€” confirme para poder entrar."
     return True, (
-        "Conta criada! Não há um servidor de e-mail configurado neste ambiente, "
-        "então o link de confirmação foi salvo em data/emails_enviados.log para teste."
+        "Conta criada! NÃ£o hÃ¡ um servidor de e-mail configurado neste ambiente, "
+        "entÃ£o o link de confirmaÃ§Ã£o foi salvo em data/emails_enviados.log para teste."
     )
 
 
 def fazer_login(identificador, senha):
-    """identificador pode ser nome de usuário OU e-mail.
+    """identificador pode ser nome de usuÃ¡rio OU e-mail.
     Retorna (sucesso: bool, mensagem: str)."""
 
     identificador = (identificador or "").strip()
     usuario_db = db.buscar_usuario_por_login(identificador)
 
-    # Mensagem genérica em ambos os casos (usuário inexistente ou
-    # senha errada) para não revelar se um usuário existe ou não.
+    # Mensagem genÃ©rica em ambos os casos (usuÃ¡rio inexistente ou
+    # senha errada) para nÃ£o revelar se um usuÃ¡rio existe ou nÃ£o.
     if not usuario_db or not auth.verificar_senha(senha or "", usuario_db["senha_hash"], usuario_db["salt"]):
-        return False, "Usuário/e-mail ou senha inválidos."
+        return False, "UsuÃ¡rio/e-mail ou senha invÃ¡lidos."
 
     if not usuario_db["email_confirmado"]:
         return False, "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada."
@@ -237,45 +237,45 @@ def fazer_logout():
 
 
 def confirmar_email_via_token(token):
-    """Usado quando o usuário abre o link recebido por e-mail.
+    """Usado quando o usuÃ¡rio abre o link recebido por e-mail.
     Retorna (sucesso: bool, mensagem: str)."""
     if not token:
-        return False, "Link de confirmação inválido."
+        return False, "Link de confirmaÃ§Ã£o invÃ¡lido."
 
     usuario_db = db.buscar_usuario_por_token_confirmacao(token)
     if not usuario_db:
-        return False, "Link de confirmação inválido ou já utilizado."
+        return False, "Link de confirmaÃ§Ã£o invÃ¡lido ou jÃ¡ utilizado."
 
     db.confirmar_email_usuario(usuario_db["id"])
-    return True, "E-mail confirmado com sucesso! Você já pode entrar."
+    return True, "E-mail confirmado com sucesso! VocÃª jÃ¡ pode entrar."
 
 
 def solicitar_redefinicao_senha(email):
-    """Gera um token de redefinição e envia por e-mail.
+    """Gera um token de redefiniÃ§Ã£o e envia por e-mail.
     Retorna (sucesso: bool, mensagem: str)."""
     email = (email or "").strip().lower()
     usuario_db = db.buscar_usuario_por_email(email)
     if not usuario_db:
-        return False, "Não encontramos nenhuma conta com esse e-mail."
+        return False, "NÃ£o encontramos nenhuma conta com esse e-mail."
 
     token = auth.gerar_token()
     db.definir_token_redefinicao(usuario_db["id"], token)
     auth.enviar_email_redefinicao(email, usuario_db["nome_usuario"], token)
-    return True, "Se o e-mail existir, enviamos um link de redefinição de senha."
+    return True, "Se o e-mail existir, enviamos um link de redefiniÃ§Ã£o de senha."
 
 
 def redefinir_senha_via_token(token, nova_senha, confirmar_nova_senha):
-    """Usado na tela acessada pelo link de redefinição.
+    """Usado na tela acessada pelo link de redefiniÃ§Ã£o.
     Retorna (sucesso: bool, mensagem: str)."""
     if not token:
-        return False, "Link de redefinição inválido."
+        return False, "Link de redefiniÃ§Ã£o invÃ¡lido."
 
     usuario_db = db.buscar_usuario_por_token_redefinicao(token)
     if not usuario_db:
-        return False, "Link de redefinição inválido ou já utilizado."
+        return False, "Link de redefiniÃ§Ã£o invÃ¡lido ou jÃ¡ utilizado."
 
     if nova_senha != confirmar_nova_senha:
-        return False, "As senhas não coincidem."
+        return False, "As senhas nÃ£o coincidem."
 
     senha_ok, mensagem_senha = auth.validar_senha_forte(nova_senha)
     if not senha_ok:
@@ -283,17 +283,17 @@ def redefinir_senha_via_token(token, nova_senha, confirmar_nova_senha):
 
     senha_hash, salt = auth.gerar_hash_senha(nova_senha)
     db.atualizar_senha_usuario(usuario_db["id"], senha_hash, salt)
-    return True, "Senha redefinida com sucesso! Já pode entrar com a nova senha."
+    return True, "Senha redefinida com sucesso! JÃ¡ pode entrar com a nova senha."
 
 
 # ==========================================
-# ADMINISTRAÇÃO
+# ADMINISTRAÃ‡ÃƒO
 # ==========================================
 
 def criar_ou_atualizar_admin(nome_usuario, email, senha):
-    """Cria a conta de administrador (já confirmada, sem precisar de
-    e-mail) ou atualiza a senha se ela já existir. Usado tanto pelo
-    script criar_admin.py quanto pela inicialização via variáveis de
+    """Cria a conta de administrador (jÃ¡ confirmada, sem precisar de
+    e-mail) ou atualiza a senha se ela jÃ¡ existir. Usado tanto pelo
+    script criar_admin.py quanto pela inicializaÃ§Ã£o via variÃ¡veis de
     ambiente. Retorna (sucesso: bool, mensagem: str)."""
 
     nome_usuario = (nome_usuario or "").strip()
@@ -329,7 +329,7 @@ def criar_ou_atualizar_admin(nome_usuario, email, senha):
             email_confirmado=True,
         )
     except sqlite3.IntegrityError:
-        return False, "Já existe uma conta com esse nome de usuário ou e-mail."
+        return False, "JÃ¡ existe uma conta com esse nome de usuÃ¡rio ou e-mail."
 
     return True, f"Administrador '{nome_usuario}' criado com sucesso."
 
@@ -338,19 +338,19 @@ def garantir_admin_via_env():
     """Garante que sempre exista um administrador.
 
     Prioridade:
-    1. ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD (variáveis de
-       ambiente), se estiverem definidas — use isso em produção.
-    2. Caso contrário, cria a conta padrão (admin / Admin@123), para
-       o projeto já sair funcionando sem nenhuma configuração extra.
+    1. ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD (variÃ¡veis de
+       ambiente), se estiverem definidas â€” use isso em produÃ§Ã£o.
+    2. Caso contrÃ¡rio, cria a conta padrÃ£o (admin / Admin@123), para
+       o projeto jÃ¡ sair funcionando sem nenhuma configuraÃ§Ã£o extra.
 
-    Só roda se ainda não existir nenhum administrador no banco — não
-    fica recriando/sobrescrevendo a cada execução do app.
+    SÃ³ roda se ainda nÃ£o existir nenhum administrador no banco â€” nÃ£o
+    fica recriando/sobrescrevendo a cada execuÃ§Ã£o do app.
     """
 
     if db.contar_usuarios() and any(
         u["tipo"] == TIPO_ADMIN for u in db.listar_usuarios()
     ):
-        return  # já existe um administrador, não faz nada
+        return  # jÃ¡ existe um administrador, nÃ£o faz nada
 
     nome_usuario = os.environ.get("ADMIN_USERNAME") or ADMIN_USUARIO_PADRAO
     email = os.environ.get("ADMIN_EMAIL") or ADMIN_EMAIL_PADRAO
@@ -360,7 +360,7 @@ def garantir_admin_via_env():
 
 
 def listar_usuarios_admin():
-    """Lista de usuários para o painel de administração."""
+    """Lista de usuÃ¡rios para o painel de administraÃ§Ã£o."""
     return db.listar_usuarios()
 
 
@@ -385,13 +385,13 @@ def ativar_usuario_admin(usuario_id):
 
 
 # ==========================================
-# INICIALIZAÇÃO
+# INICIALIZAÃ‡ÃƒO
 # ==========================================
 
 def _semear_usuarios_demo():
-    """Cria as contas de demonstração (equivalentes às que existiam
-    como dicionário fixo antes) já com senha em hash e e-mail
-    confirmado, para o app continuar utilizável de imediato."""
+    """Cria as contas de demonstraÃ§Ã£o (equivalentes Ã s que existiam
+    como dicionÃ¡rio fixo antes) jÃ¡ com senha em hash e e-mail
+    confirmado, para o app continuar utilizÃ¡vel de imediato."""
 
     demo = [
         ("marcos", "marcos@example.com", "Marcos Silva", "Marcos@123", TIPO_LOCATARIO),
@@ -415,35 +415,35 @@ def _semear_usuarios_demo():
 
 
 def inicializar_estado():
-    """Roda uma única vez por sessão. Cria a fonte única de
-    verdade dos dados do app (usuários, salas e reservas)."""
+    """Roda uma Ãºnica vez por sessÃ£o. Cria a fonte Ãºnica de
+    verdade dos dados do app (usuÃ¡rios, salas e reservas)."""
     if "inicializado" in st.session_state:
         return
 
     st.session_state.inicializado = True
-    st.session_state.usuario = None  # None = ninguém logado ainda
+    st.session_state.usuario = None  # None = ninguÃ©m logado ainda
     st.session_state.donos_salas = {}
 
     db.criar_tabelas()
 
     if db.contar_salas() == 0:
         db.cadastrar_sala(
-            nome="Sala Executiva", capacidade=12, localizacao="2º andar",
+            nome="Sala Executiva", capacidade=12, localizacao="2Âº andar",
             projetor=True, computador=False, internet=True,
             webcam=False, quadro=False, ar_condicionado=False
         )
         db.cadastrar_sala(
-            nome="Sala de Reunião 01", capacidade=8, localizacao="2º andar",
+            nome="Sala de ReuniÃ£o 01", capacidade=8, localizacao="2Âº andar",
             projetor=False, computador=False, internet=True,
             webcam=False, quadro=False, ar_condicionado=False
         )
         db.cadastrar_sala(
-            nome="Sala de Reunião 02", capacidade=8, localizacao="2º andar",
+            nome="Sala de ReuniÃ£o 02", capacidade=8, localizacao="2Âº andar",
             projetor=False, computador=False, internet=True,
             webcam=False, quadro=False, ar_condicionado=False
         )
         db.cadastrar_sala(
-            nome="Sala de Treinamento", capacidade=20, localizacao="3º andar",
+            nome="Sala de Treinamento", capacidade=20, localizacao="3Âº andar",
             projetor=True, computador=False, internet=True,
             webcam=False, quadro=False, ar_condicionado=False
         )
@@ -470,3 +470,4 @@ def inicializar_estado():
 
     st.session_state.favoritos = set()
     st.session_state.resultado_busca = None
+
