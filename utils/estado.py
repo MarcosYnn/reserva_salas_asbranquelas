@@ -203,10 +203,10 @@ def cadastrar_usuario(nome_usuario, email, nome_completo, senha, confirmar_senha
 
     enviado_por_smtp = auth.enviar_email_confirmacao(email, nome_usuario, token)
     if enviado_por_smtp:
-        return True, "Conta criada! Enviamos um e-mail de confirmaÃ§Ã£o â€” confirme para poder entrar."
+        return True, "Conta criada! Enviamos um e-mail de confirmação — confirme para poder entrar."
     return True, (
-        "Conta criada! NÃ£o hÃ¡ um servidor de e-mail configurado neste ambiente, "
-        "entÃ£o o link de confirmaÃ§Ã£o foi salvo em data/emails_enviados.log para teste."
+        "Conta criada! Não há um servidor de e-mail configurado neste ambiente, "
+        "então o link de confirmação foi salvo em data/emails_enviados.log para teste."
     )
 
 
@@ -244,10 +244,10 @@ def confirmar_email_via_token(token):
 
     usuario_db = db.buscar_usuario_por_token_confirmacao(token)
     if not usuario_db:
-        return False, "Link de confirmaÃ§Ã£o invÃ¡lido ou jÃ¡ utilizado."
+        return False, "Link de confirmação inválido ou já utilizado."
 
     db.confirmar_email_usuario(usuario_db["id"])
-    return True, "E-mail confirmado com sucesso! VocÃª jÃ¡ pode entrar."
+    return True, "E-mail confirmado com sucesso! Voce já pode entrar."
 
 
 def solicitar_redefinicao_senha(email):
@@ -283,17 +283,17 @@ def redefinir_senha_via_token(token, nova_senha, confirmar_nova_senha):
 
     senha_hash, salt = auth.gerar_hash_senha(nova_senha)
     db.atualizar_senha_usuario(usuario_db["id"], senha_hash, salt)
-    return True, "Senha redefinida com sucesso! JÃ¡ pode entrar com a nova senha."
+    return True, "Senha redefinida com sucesso! Já pode entrar com a nova senha."
 
 
 # ==========================================
-# ADMINISTRAÃ‡ÃƒO
+# ADMINISTRAÇÃO
 # ==========================================
 
 def criar_ou_atualizar_admin(nome_usuario, email, senha):
-    """Cria a conta de administrador (jÃ¡ confirmada, sem precisar de
-    e-mail) ou atualiza a senha se ela jÃ¡ existir. Usado tanto pelo
-    script criar_admin.py quanto pela inicializaÃ§Ã£o via variÃ¡veis de
+    """Cria a conta de administrador (já confirmada, sem precisar de
+    e-mail) ou atualiza a senha se ela já existir. Usado tanto pelo
+    script criar_admin.py quanto pela inicialização via variáveis de
     ambiente. Retorna (sucesso: bool, mensagem: str)."""
 
     nome_usuario = (nome_usuario or "").strip()

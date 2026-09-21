@@ -127,7 +127,7 @@ def pagina_login():
             st.markdown("<br>", unsafe_allow_html=True)
 
             entrar = st.form_submit_button(
-                "âž” Entrar", type="primary", use_container_width=True
+                "Entrar", type="primary", use_container_width=True
             )
 
         if entrar:
