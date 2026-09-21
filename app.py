@@ -16,7 +16,7 @@ import main
 
 
 # ==========================================
-# CONFIGURAÃ‡ÃƒO DA PÃGINA
+# Configuracao da pagina
 # ==========================================
 
 st.set_page_config(

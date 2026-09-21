@@ -13,14 +13,14 @@ from controllers.autorizacao_controller import exigir_tipo
 
 
 # ==========================================
-# PÃGINAS - LOCATÃRIO
+# # PÁGINAS - LOCATÁRIO
 # ==========================================
 
 def pagina_dashboard_locatario(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
     st.markdown(f'<div class="titulo">OlÃ¡, {usuario["nome"].split()[0]}! ðŸ‘‹</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitulo">Encontre uma sala para o seu prÃ³ximo compromisso.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitulo">Encontre uma sala para o seu proximo compromisso.</div>', unsafe_allow_html=True)
 
     minhas_reservas = reservas_de(usuario["nome"])
     hoje = "17/08/2026"

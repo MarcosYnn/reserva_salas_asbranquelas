@@ -4,12 +4,12 @@ from utils.estado import fazer_login
 
 
 def pagina_login():
-    # DivisÃ£o principal: Painel Esquerdo (ApresentaÃ§Ã£o) | Painel Direito (Login)
+    # Divisão principal: Painel Esquerdo (Apresentação) | Painel Direito (Login)
     col_esquerda, col_direita = st.columns([1.1, 1], gap="large")
 
-    # --- PAINEL ESQUERDO (ApresentaÃ§Ã£o) ---
+    # --- PAINEL ESQUERDO (Apresentação) ---
     with col_esquerda:
-        # CabeÃ§alho com LogÃ³tipo
+        # Cabeçalho com Logótipo
         col_logo, col_titulo = st.columns([0.28, 0.72], vertical_alignment="center")
         with col_logo:
             diretorio_base = os.path.dirname(os.path.abspath(__file__))
@@ -24,14 +24,14 @@ def pagina_login():
             st.markdown(
                 '<div style="line-height: 1.2;">'
                 '<span style="font-size: 22px; font-weight: bold; color: #0f172a;">Reserva de Salas</span><br>'
-                '<span style="font-size: 13px; color: #475569; font-weight: 500;">Sistema AcadÃ©mico</span>'
+                '<span style="font-size: 13px; color: #475569; font-weight: 500;">Sistema Acadêmico</span>'
                 '</div>',
                 unsafe_allow_html=True,
             )
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # TÃ­tulo principal em Preto e Azul
+        # Ti­tulo principal em Preto e Azul
         st.markdown(
             '<h1 style="font-size: 36px; font-weight: 800; color: #0f172a; margin-bottom: 10px;">'
             'Mais que salas,<br><span style="color: #2563eb;">oportunidades.</span>'
@@ -39,18 +39,18 @@ def pagina_login():
             unsafe_allow_html=True,
         )
 
-        # SubtÃ­tulo legÃ­vel em cinza escuro/preto
+        # Subtítulo legível em cinza escuro/preto
         st.markdown(
             '<p style="color: #334155; font-size: 15px; line-height: 1.5; font-weight: 400;">'
-            "Reserve espaÃ§os da sua instituiÃ§Ã£o de forma simples, rÃ¡pida e segura. "
-            "Aqui, cada sala Ã© um passo para grandes ideias."
+            "Reserve espaços da sua instituiçåo de forma simples, rápida e segura. "
+            "Aqui, cada sala à um passo para grandes ideias."
             "</p>",
             unsafe_allow_html=True,
         )
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # CartÃµes de categorias em tons claros com texto escuro
+        # Cartoes de categorias em tons claros com texto escuro
         cat1, cat2, cat3, cat4 = st.columns(4)
         with cat1:
             st.markdown(
@@ -64,7 +64,7 @@ def pagina_login():
             st.markdown(
                 '<div style="text-align: center; padding: 12px 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;">'
                 '<span style="font-size: 22px;">ðŸ§ª</span><br>'
-                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">LaboratÃ³rios</span>'
+                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">Laboratórios</span>'
                 "</div>",
                 unsafe_allow_html=True,
             )
@@ -80,7 +80,7 @@ def pagina_login():
             st.markdown(
                 '<div style="text-align: center; padding: 12px 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;">'
                 '<span style="font-size: 22px;">ðŸŽ­</span><br>'
-                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">AuditÃ³rios</span>'
+                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">Auditórios</span>'
                 "</div>",
                 unsafe_allow_html=True,
             )
@@ -88,12 +88,12 @@ def pagina_login():
         st.markdown("<br><br>", unsafe_allow_html=True)
         st.markdown(
             '<p style="font-size: 11px; letter-spacing: 1.5px; color: #475569; font-weight: 700;">'
-            "TECNOLOGIA A SERVIÃ‡O DA SUA JORNADA ACADÃ‰MICA."
+            "TECNOLOGIA A SERVIÇO DA SUA JORNADA ACADÊMICA."
             "</p>",
             unsafe_allow_html=True,
         )
 
-    # --- PAINEL DIREITO (FormulÃ¡rio) ---
+    # --- PAINEL DIREITO (Formulário) ---
     with col_direita:
         st.markdown(
             '<div style="text-align: right; color: #475569; font-size: 12px; margin-bottom: 20px; font-weight: 600;">'
@@ -110,14 +110,14 @@ def pagina_login():
         )
         st.markdown(
             '<p style="color: #475569; font-size: 14px; margin-bottom: 24px;">'
-            "FaÃ§a login para continuar com a reserva de salas."
+            "Faça login para continuar com a reserva de salas."
             "</p>",
             unsafe_allow_html=True,
         )
 
         with st.form("form_login_moderno"):
             login_input = st.text_input(
-                "UsuÃ¡rio", placeholder="Digite seu usuÃ¡rio"
+                "Usuário", placeholder="Digite seu usuário"
             )
 
             senha_input = st.text_input(
@@ -134,8 +134,8 @@ def pagina_login():
             if fazer_login(login_input, senha_input):
                 st.rerun()
             else:
-                st.error("UsuÃ¡rio ou senha invÃ¡lidos.")
+                st.error("Usuário ou senha inválidos.")
 
-        with st.expander("Contas de demonstraÃ§Ã£o"):
-            st.caption("**LocatÃ¡rio:** usuÃ¡rio `marcos` Â· senha `1234`")
-            st.caption("**ProprietÃ¡rio:** usuÃ¡rio `ana` Â· senha `1234`")
+        with st.expander("Contas de demonstração"):
+            st.caption("**Locatário:** usuário `marcos` · senha `1234`")
+            st.caption("**Proprietário:** usuário `ana` · senha `1234`")
