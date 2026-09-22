@@ -160,22 +160,22 @@ def pagina_dashboard_proprietario(usuario):
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        render_card("ðŸ¢ Salas cadastradas", len(minhas_salas), "Salas ativas")
+        render_card(" Salas cadastradas", len(minhas_salas), "Salas ativas")
     with col2:
-        render_card("ðŸ“… Reservas recebidas", len(reservas_recebidas), f"{confirmadas} confirmadas")
+        render_card(" Reservas recebidas", len(reservas_recebidas), f"{confirmadas} confirmadas")
     with col3:
-        render_card("ðŸ’° Faturamento", "R$ 2.450", "Este mês")
+        render_card(" Faturamento", "R$ 2.450", "Este mês")
     with col4:
-        render_card("ðŸ“Š Taxa de confirmação", f"{taxa}%", "Sobre reservas recebidas")
+        render_card(" Taxa de confirmação", f"{taxa}%", "Sobre reservas recebidas")
 
-    render_secao_titulo("ðŸ“Š Resumo de ocupaçào")
+    render_secao_titulo(" Resumo de ocupação")
     st.line_chart({"Semana 1": 45, "Semana 2": 62, "Semana 3": 55, "Semana 4": 72})
 
-    render_secao_titulo("ðŸ“‹ Reservas recentes nas suas salas")
+    render_secao_titulo(" Reservas recentes nas suas salas")
     render_lista_reservas(reservas_recebidas, mostrar_cliente=True)
 
     st.markdown("---")
-    with st.expander("âž• Cadastrar nova sala"):
+    with st.expander(" Cadastrar nova sala"):
         with st.form("form_nova_sala", clear_on_submit=True):
             col1, col2 = st.columns(2)
             with col1:
