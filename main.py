@@ -264,7 +264,7 @@ def pagina_perfil_proprietario(usuario):
 def pagina_admin(usuario):
     exigir_tipo(usuario, [TIPO_ADMIN])
 
-    st.markdown('<div class="titulo">Administração ðŸ› ï¸</div>', unsafe_allow_html=True)
+    st.markdown('<div class="titulo">Administração ¸</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="subtitulo">Gerencie as contas cadastradas no sistema.</div>',
         unsafe_allow_html=True,
@@ -346,7 +346,7 @@ PAGINAS_PROPRIETARIO = {
 # (para poder gerenciar salas do sistema) mais o painel de contas.
 PAGINAS_ADMIN = {
     **PAGINAS_PROPRIETARIO,
-    "ðŸ› ï¸ Administração": pagina_admin,
+    " Administração": pagina_admin,
 }
 
 PAGINAS_POR_TIPO = {
