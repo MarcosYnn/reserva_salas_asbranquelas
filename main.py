@@ -184,7 +184,7 @@ def pagina_dashboard_proprietario(usuario):
             with col2:
                 localizacao = st.text_input("Localização (ex: 2º andar)")
 
-            st.caption("Recursos disponÃ­veis")
+            st.caption("Recursos disponí­veis")
             rc1, rc2, rc3 = st.columns(3)
             with rc1:
                 projetor = st.checkbox("Projetor")
@@ -227,11 +227,11 @@ def pagina_minhas_salas(usuario):
     exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
 
     st.markdown('<div class="titulo">Minhas Salas ðŸ¢</div>', unsafe_allow_html=True)
-    render_secao_titulo("Salas cadastradas por vocÃª")
+    render_secao_titulo("Salas cadastradas por você")
 
     minhas_salas = salas_de(usuario["login"])
     if not minhas_salas:
-        st.caption("Voc ainda nao cadastrou nenhuma sala.")
+        st.caption("Você ainda não cadastrou nenhuma sala.")
         return
 
     colunas = st.columns(3)
