@@ -346,7 +346,7 @@ PAGINAS_PROPRIETARIO = {
 # (para poder gerenciar salas do sistema) mais o painel de contas.
 PAGINAS_ADMIN = {
     **PAGINAS_PROPRIETARIO,
-    " Administração": pagina_admin,
+    "Administração": pagina_admin,
 }
 
 PAGINAS_POR_TIPO = {
