@@ -329,17 +329,17 @@ def pagina_admin(usuario):
 
 
 PAGINAS_LOCATARIO = {
-    "ðŸ  Dashboard": pagina_dashboard_locatario,
-    "ðŸ”Ž Buscar Salas": pagina_buscar_salas,
-    "ðŸ“… Minhas Reservas": pagina_minhas_reservas,
-    "â¤ï¸ Favoritos": pagina_favoritos,
-    "ðŸ‘¤ Perfil": pagina_perfil,
+    "Dashboard": pagina_dashboard_locatario,
+    "Buscar Salas": pagina_buscar_salas,
+    "Minhas Reservas": pagina_minhas_reservas,
+    "Favoritos": pagina_favoritos,
+    "Perfil": pagina_perfil,
 }
 
 PAGINAS_PROPRIETARIO = {
-    "ðŸ  Dashboard": pagina_dashboard_proprietario,
-    "ðŸ¢ Minhas Salas": pagina_minhas_salas,
-    "ðŸ‘¤ Perfil": pagina_perfil_proprietario,
+    "Dashboard": pagina_dashboard_proprietario,
+    "Minhas Salas": pagina_minhas_salas,
+    "Perfil": pagina_perfil_proprietario,
 }
 
 # O administrador tem acesso total: todas as páginas de proprietário

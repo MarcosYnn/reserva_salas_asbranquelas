@@ -89,7 +89,7 @@ if usuario is None:
 # ==========================================
 
 with st.sidebar:
-    st.markdown("##Reserva de Salas")
+    st.markdown("Reserva de Salas")
     st.divider()
 
     st.markdown(f"### {usuario['nome']}")
