@@ -341,7 +341,7 @@ def garantir_admin_via_env():
     1. ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD (variÃ¡veis de
        ambiente), se estiverem definidas â€” use isso em produÃ§Ã£o.
     2. Caso contrÃ¡rio, cria a conta padrÃ£o (admin / Admin@123), para
-       o projeto jÃ¡ sair funcionando sem nenhuma configuraÃ§Ã£o extra.
+       o projeto jÃ¡ sair funcionando sem nenhuma configuração extra.
 
     SÃ³ roda se ainda nÃ£o existir nenhum administrador no banco â€” nÃ£o
     fica recriando/sobrescrevendo a cada execuÃ§Ã£o do app.
