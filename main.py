@@ -112,7 +112,7 @@ def pagina_minhas_reservas(usuario):
 
     st.markdown('<div class="titulo">Minhas Reservas </div>', unsafe_allow_html=True)
     render_secao_titulo(" Todas as suas reservas")
-    render_lista_reservas(reservas_de(usuario["nome"]))
+    render_lista_reservas(reservas_de(usuario["nome"]), permitir_cancelar=True)
 
 
 def pagina_favoritos(usuario):
