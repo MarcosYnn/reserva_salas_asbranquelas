@@ -4,7 +4,7 @@ try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-    pass  # python-dotenv nao instalado: use variaveis de ambiente do sistema
+    pass  # python-dotenv não instalado: use variáveis de ambiente do sistema
 
 from utils.estado import (
     inicializar_estado, usuario_logado, fazer_logout,
@@ -16,12 +16,12 @@ import main
 
 
 # ==========================================
-# Configuracao da pagina
+# Configuração da página
 # ==========================================
 
 st.set_page_config(
     page_title="Reserva de Salas",
-    page_icon="ðŸ¢",
+    page_icon="🏢",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -32,7 +32,7 @@ inicializar_estado()
 # ==========================================
 # LINKS RECEBIDOS POR E-MAIL
 # Streamlit não tem rotas de verdade — os links de confirmação e de
-# redefiniçåo de senha chegam como parametros na propria URL do app
+# redefinição de senha chegam como parâmetros na própria URL do app
 # (?confirmar=TOKEN ou ?redefinir=TOKEN) e são tratados aqui, antes
 # de qualquer outra coisa, tanto logado quanto deslogado.
 # ==========================================
@@ -44,48 +44,72 @@ token_redefinicao = parametros.get("redefinir")
 if token_confirmacao:
     sucesso, mensagem = confirmar_email_via_token(token_confirmacao)
     st.query_params.clear()
+
     if sucesso:
         st.success(mensagem)
     else:
         st.error(mensagem)
-    st.info("Voce ja pode ir para a aba **Entrar** para acessar sua conta.")
+
+    st.info("Você já pode ir para a aba **Entrar** para acessar sua conta.")
     pagina_login()
     st.stop()
 
 if token_redefinicao:
-    st.markdown('<div class="titulo">ðŸ”‘ Redefinir senha</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="titulo">🔑 Redefinir senha</div>',
+        unsafe_allow_html=True
+    )
+
     with st.form("form_redefinir_senha"):
         nova_senha = st.text_input("Nova senha", type="password")
-        confirmar_nova_senha = st.text_input("Confirme a nova senha", type="password")
-        st.caption("A senha deve ter 8+ caracteres, com maiuscula, minúscula e número.")
-        redefinir = st.form_submit_button("Redefinir senha", type="primary")
+        confirmar_nova_senha = st.text_input(
+            "Confirme a nova senha",
+            type="password"
+        )
+
+        st.caption(
+            "A senha deve ter 8+ caracteres, com maiúscula, minúscula e número."
+        )
+
+        redefinir = st.form_submit_button(
+            "Redefinir senha",
+            type="primary"
+        )
 
     if redefinir:
         sucesso, mensagem = redefinir_senha_via_token(
-            token_redefinicao, nova_senha, confirmar_nova_senha
+            token_redefinicao,
+            nova_senha,
+            confirmar_nova_senha
         )
+
         if sucesso:
             st.query_params.clear()
             st.success(mensagem)
-            st.info("Voce ja pode ir para a aba **Entrar** para acessar sua conta.")
+            st.info(
+                "Você já pode ir para a aba **Entrar** para acessar sua conta."
+            )
             pagina_login()
         else:
             st.error(mensagem)
+
     st.stop()
+
 
 usuario = usuario_logado()
 
 # ==========================================
 # GATE DE LOGIN
-# Sem usuario logado, nem a sidebar nem o conteúdo aparecem.
+# Sem usuário logado, nem a sidebar nem o conteúdo aparecem.
 # ==========================================
 
 if usuario is None:
     pagina_login()
     st.stop()
 
+
 # ==========================================
-# SIDEBAR (só é montada com usuario autenticado)
+# SIDEBAR (só é montada com usuário autenticado)
 # ==========================================
 
 with st.sidebar:
@@ -105,7 +129,8 @@ with st.sidebar:
     )
 
     st.divider()
-    if st.button(" Sair"):
+
+    if st.button("Sair"):
         fazer_logout()
         st.rerun()
 
@@ -115,4 +140,3 @@ with st.sidebar:
 # ==========================================
 
 main.render_pagina(pagina, usuario)
-
