@@ -15,10 +15,9 @@ def pagina_login():
     
     bg_style = f'url("data:image/png;base64,{img_base64}")' if img_base64 else "none"
 
-    # Estilização CSS completa
+    # Estilização CSS completa (Glassmorphism & Tema Escuro)
     custom_css = f"""
     <style>
-    /* Ocultar elementos padrão do Streamlit */
     #MainMenu, header, footer {{
         visibility: hidden;
     }}
@@ -31,14 +30,12 @@ def pagina_login():
         color: #FFFFFF;
     }}
 
-    /* Ajuste de espaçamento geral */
     .block-container {{
         padding-top: 2rem !important;
         padding-bottom: 2rem !important;
         max-width: 1200px;
     }}
 
-    /* Header e Título */
     .brand-title {{
         font-size: 1.25rem;
         font-weight: 700;
@@ -74,7 +71,6 @@ def pagina_login():
         margin-bottom: 2rem;
     }}
 
-    /* Container dos Cards Translúcidos */
     .card-grid {{
         display: flex;
         gap: 0.8rem;
@@ -104,7 +100,6 @@ def pagina_login():
         color: #E2E8F0;
     }}
 
-    /* Rodapé */
     .footer-text {{
         font-size: 0.7rem;
         color: #64748B;
@@ -114,7 +109,6 @@ def pagina_login():
         padding-left: 8px;
     }}
 
-    /* Estilização da caixa de Login */
     div[data-testid="stForm"] {{
         background: rgba(15, 23, 42, 0.65) !important;
         backdrop-filter: blur(16px) !important;
@@ -148,13 +142,22 @@ def pagina_login():
     """
     st.markdown(custom_css, unsafe_allow_html=True)
 
-    # Colunas principais
     col_left, col_right = st.columns([1.2, 0.8], gap="large")
 
     with col_left:
-        # String HTML em uma linha/sem quebras brutas para evitar o erro de código do Streamlit
-        html_conteudo = """<div class="brand-title">🏛️ Reserva de Salas</div><div class="brand-subtitle">SISTEMA ACADÂMICO</div><h1 class="hero-title">Mais que salas,<br><span class="hero-title-highlight">oportunidades.</span></h1><p class="hero-desc">Reserve espaços da sua instituição de forma simples, rápida e segura. Aqui, cada sala é um passo para grandes ideias.</p><div class="card-grid"><div class="category-card"><span class="category-icon">🖥️</span><span class="category-text">Salas de Aula</span></div><div class="category-card"><span class="category-icon">🧪</span><span class="category-text">Laboratórios</span></div><div class="category-card"><span class="category-icon">🔧</span><span class="category-text">Oficinas</span></div><div class="category-card"><span class="category-icon">👥</span><span class="category-text">Auditórios</span></div></div><div class="footer-text">TECNOLOGIA A SERVIÇO DA SUA JORNADA ACADÊMICA.</div>"""
-        
+        html_conteudo = """
+        <div class="brand-title">🏛️ Reserva de Salas</div>
+        <div class="brand-subtitle">SISTEMA ACADÂMICO</div>
+        <h1 class="hero-title">Mais que salas,<br><span class="hero-title-highlight">oportunidades.</span></h1>
+        <p class="hero-desc">Reserve espaços da sua instituição de forma simples, rápida e segura. Aqui, cada sala é um passo para grandes ideias.</p>
+        <div class="card-grid">
+            <div class="category-card"><span class="category-icon">🖥️</span><span class="category-text">Salas de Aula</span></div>
+            <div class="category-card"><span class="category-icon">🧪</span><span class="category-text">Laboratórios</span></div>
+            <div class="category-card"><span class="category-icon">🔧</span><span class="category-text">Oficinas</span></div>
+            <div class="category-card"><span class="category-icon">👥</span><span class="category-text">Auditórios</span></div>
+        </div>
+        <div class="footer-text">TECNOLOGIA A SERVIÇO DA SUA JORNADA ACADÊMICA.</div>
+        """
         st.markdown(html_conteudo, unsafe_allow_html=True)
 
     with col_right:
@@ -162,13 +165,21 @@ def pagina_login():
             st.markdown("<h2 style='color: white; font-size: 1.8rem; margin-bottom: 0.2rem;'>Bem-vindo de volta!</h2>", unsafe_allow_html=True)
             st.markdown("<p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 1.5rem;'>Faça login para continuar com a reserva de salas.</p>", unsafe_allow_html=True)
             
-            usuario = st.text_input("Usuário", placeholder="Digite seu usuário")
-            senha = st.text_input("Senha", type="password", placeholder="Digite sua senha")
+            usuario_input = st.text_input("Usuário", placeholder="Digite seu usuário")
+            senha_input = st.text_input("Senha", type="password", placeholder="Digite sua senha")
             
             btn_login = st.form_submit_button("Entrar", use_container_width=True)
             
             if btn_login:
-                if usuario and senha:
-                    st.success("Login realizado com sucesso!")
+                if usuario_input and senha_input:
+                    # Dicionário completo contendo todas as chaves exigidas pelo app.py e main.py
+                    st.session_state["usuario"] = {
+                        "id": 1,
+                        "nome": usuario_input,
+                        "login": usuario_input,
+                        "email": f"{usuario_input}@exemplo.com",
+                        "tipo": "Administrador"
+                    }
+                    st.rerun()
                 else:
                     st.error("Preencha todos os campos.")
