@@ -274,15 +274,15 @@ def pagina_admin(usuario):
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        render_card("ðŸ‘¥ Total de contas", len(usuarios), "No sistema")
+        render_card(" Total de contas", len(usuarios), "No sistema")
     with col2:
         confirmadas = len([u for u in usuarios if u["email_confirmado"]])
-        render_card("âœ… E-mails confirmados", confirmadas, f"de {len(usuarios)}")
+        render_card(" E-mails confirmados", confirmadas, f"de {len(usuarios)}")
     with col3:
         admins = len([u for u in usuarios if u["tipo"] == TIPO_ADMIN])
-        render_card("ðŸ› ï¸ Administradores", admins, "Contas com acesso total")
+        render_card(" Administradores", admins, "Contas com acesso total")
 
-    render_secao_titulo("ðŸ‘¥ Contas cadastradas")
+    render_secao_titulo(" Contas cadastradas")
 
     for dados in usuarios:
         cols = st.columns([2, 2, 1.2, 1.2, 1.2, 1, 1])
@@ -292,8 +292,8 @@ def pagina_admin(usuario):
         with cols[1]:
             st.write(dados["email"])
         with cols[2]:
-            st.write("âœ… Confirmado" if dados["email_confirmado"] else "â³ Pendente")
-            st.caption("ðŸ”“ Ativo" if dados["ativo"] else "ðŸ”’ Bloqueado")
+            st.write(" Confirmado" if dados["email_confirmado"] else " Pendente")
+            st.caption(" Ativo" if dados["ativo"] else " Bloqueado")
         with cols[3]:
             novo_tipo = st.selectbox(
                 "Tipo", [TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN],
@@ -311,16 +311,16 @@ def pagina_admin(usuario):
         with cols[5]:
             if dados["id"] != usuario["id"]:
                 if dados["ativo"]:
-                    if st.button("ðŸ”’ Bloquear", key=f"bloquear_{dados['id']}"):
+                    if st.button(" Bloquear", key=f"bloquear_{dados['id']}"):
                         desativar_usuario_admin(dados["id"])
                         st.rerun()
                 else:
-                    if st.button("ðŸ”“ Reativar", key=f"reativar_{dados['id']}"):
+                    if st.button(" Reativar", key=f"reativar_{dados['id']}"):
                         ativar_usuario_admin(dados["id"])
                         st.rerun()
         with cols[6]:
             if dados["id"] != usuario["id"]:
-                if st.button("ðŸ—‘ï¸", key=f"excluir_{dados['id']}"):
+                if st.button(" Excluir", key=f"excluir_{dados['id']}"):
                     excluir_usuario_admin(dados["id"])
                     st.rerun()
         st.divider()
