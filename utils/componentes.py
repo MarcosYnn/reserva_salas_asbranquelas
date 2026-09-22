@@ -1,5 +1,4 @@
-﻿```python
-import streamlit as st
+﻿import streamlit as st
 from utils.estado import sala_por_id
 
 
@@ -141,4 +140,3 @@ def render_sala_card(sala, coluna, contexto, usuario_atual_nome):
                     st.session_state.favoritos.add(sala["id"])
 
                 st.rerun()
-```
