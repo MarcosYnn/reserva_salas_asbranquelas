@@ -1,141 +1,185 @@
-﻿import os
-import streamlit as st
-from utils.estado import fazer_login
+﻿import streamlit as st
+import base64
+import os
 
+def get_base64_of_bin_file(bin_file):
+    if os.path.exists(bin_file):
+        with open(bin_file, 'rb') as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    return ""
 
 def pagina_login():
-    # Divisão principal: Painel Esquerdo (Apresentação) | Painel Direito (Login)
-    col_esquerda, col_direita = st.columns([1.1, 1], gap="large")
+    # Carrega a imagem da sala como background em base64
+    img_base64 = get_base64_of_bin_file('assets/sala.png')
+    
+    bg_style = f'url("data:image/png;base64,{img_base64}")' if img_base64 else "none"
 
-    # --- PAINEL ESQUERDO (Apresentação) ---
-    with col_esquerda:
-        # Cabeçalho com Logótipo
-        col_logo, col_titulo = st.columns([0.28, 0.72], vertical_alignment="center")
-        with col_logo:
-            diretorio_base = os.path.dirname(os.path.abspath(__file__))
-            caminho_logo = os.path.join(diretorio_base, "assets", "logo.png")
+    # Estilização CSS completa (Glassmorphism & Tema Escuro)
+    custom_css = f"""
+    <style>
+    #MainMenu, header, footer {{
+        visibility: hidden;
+    }}
+    
+    .stApp {{
+        background: linear-gradient(135deg, rgba(8, 12, 22, 0.88) 0%, rgba(13, 22, 38, 0.82) 100%), {bg_style};
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: #FFFFFF;
+    }}
 
-            if os.path.exists(caminho_logo):
-                st.image(caminho_logo, width=85)  # Logo aumentada
-            else:
-                st.text("ðŸ¢")
+    .block-container {{
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 1200px;
+    }}
 
-        with col_titulo:
-            st.markdown(
-                '<div style="line-height: 1.2;">'
-                '<span style="font-size: 22px; font-weight: bold; color: #0f172a;">Reserva de Salas</span><br>'
-                '<span style="font-size: 13px; color: #475569; font-weight: 500;">Sistema Acadêmico</span>'
-                '</div>',
-                unsafe_allow_html=True,
-            )
+    .brand-title {{
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #FFFFFF;
+        margin-bottom: 0px;
+        line-height: 1.2;
+    }}
+    .brand-subtitle {{
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #4B7BEC;
+        letter-spacing: 1px;
+        margin-top: 2px;
+        margin-bottom: 2.5rem;
+    }}
 
-        st.markdown("<br>", unsafe_allow_html=True)
+    .hero-title {{
+        font-size: 2.8rem;
+        font-weight: 800;
+        color: #FFFFFF;
+        line-height: 1.15;
+        margin-bottom: 0.5rem;
+    }}
+    .hero-title-highlight {{
+        color: #3B82F6;
+    }}
 
-        # Ti­tulo principal em Preto e Azul
-        st.markdown(
-            '<h1 style="font-size: 36px; font-weight: 800; color: #0f172a; margin-bottom: 10px;">'
-            'Mais que salas,<br><span style="color: #2563eb;">oportunidades.</span>'
-            "</h1>",
-            unsafe_allow_html=True,
-        )
+    .hero-desc {{
+        color: #94A3B8;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        max-width: 480px;
+        margin-bottom: 2rem;
+    }}
 
-        # Subtítulo legível em cinza escuro/preto
-        st.markdown(
-            '<p style="color: #334155; font-size: 15px; line-height: 1.5; font-weight: 400;">'
-            "Reserve espaços da sua instituiçåo de forma simples, rápida e segura. "
-            "Aqui, cada sala à um passo para grandes ideias."
-            "</p>",
-            unsafe_allow_html=True,
-        )
+    .card-grid {{
+        display: flex;
+        gap: 0.8rem;
+        margin-bottom: 2.5rem;
+    }}
 
-        st.markdown("<br>", unsafe_allow_html=True)
+    .category-card {{
+        flex: 1;
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        padding: 1rem 0.5rem;
+        text-align: center;
+    }}
 
-        # Cartoes de categorias em tons claros com texto escuro
-        cat1, cat2, cat3, cat4 = st.columns(4)
-        with cat1:
-            st.markdown(
-                '<div style="text-align: center; padding: 12px 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;">'
-                '<span style="font-size: 22px;">ðŸ’»</span><br>'
-                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">Salas de Aula</span>'
-                "</div>",
-                unsafe_allow_html=True,
-            )
-        with cat2:
-            st.markdown(
-                '<div style="text-align: center; padding: 12px 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;">'
-                '<span style="font-size: 22px;">ðŸ§ª</span><br>'
-                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">Laboratórios</span>'
-                "</div>",
-                unsafe_allow_html=True,
-            )
-        with cat3:
-            st.markdown(
-                '<div style="text-align: center; padding: 12px 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;">'
-                '<span style="font-size: 22px;">ðŸ› ï¸</span><br>'
-                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">Oficinas</span>'
-                "</div>",
-                unsafe_allow_html=True,
-            )
-        with cat4:
-            st.markdown(
-                '<div style="text-align: center; padding: 12px 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;">'
-                '<span style="font-size: 22px;">ðŸŽ­</span><br>'
-                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">Auditórios</span>'
-                "</div>",
-                unsafe_allow_html=True,
-            )
+    .category-icon {{
+        font-size: 1.4rem;
+        margin-bottom: 0.4rem;
+        display: block;
+    }}
 
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        st.markdown(
-            '<p style="font-size: 11px; letter-spacing: 1.5px; color: #475569; font-weight: 700;">'
-            "TECNOLOGIA A SERVIÇO DA SUA JORNADA ACADÊMICA."
-            "</p>",
-            unsafe_allow_html=True,
-        )
+    .category-text {{
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #E2E8F0;
+    }}
 
-    # --- PAINEL DIREITO (Formulário) ---
-    with col_direita:
-        st.markdown(
-            '<div style="text-align: right; color: #475569; font-size: 12px; margin-bottom: 20px; font-weight: 600;">'
-            "ðŸ”’ Acesso Restrito"
-            "</div>",
-            unsafe_allow_html=True,
-        )
+    .footer-text {{
+        font-size: 0.7rem;
+        color: #64748B;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        border-left: 2px solid #3B82F6;
+        padding-left: 8px;
+    }}
 
-        st.markdown(
-            '<h2 style="font-size: 26px; font-weight: bold; color: #0f172a; margin-bottom: 4px;">'
-            "Bem-vindo de volta!"
-            "</h2>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            '<p style="color: #475569; font-size: 14px; margin-bottom: 24px;">'
-            "Faça login para continuar com a reserva de salas."
-            "</p>",
-            unsafe_allow_html=True,
-        )
+    div[data-testid="stForm"] {{
+        background: rgba(15, 23, 42, 0.65) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 16px !important;
+        padding: 2rem !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+    }}
 
-        with st.form("form_login_moderno"):
-            login_input = st.text_input(
-                "Usuário", placeholder="Digite seu usuário"
-            )
+    .stTextInput > div > div {{
+        background-color: rgba(15, 23, 42, 0.8) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: white !important;
+        border-radius: 8px !important;
+    }}
 
-            senha_input = st.text_input(
-                "Senha", type="password", placeholder="Digite sua senha"
-            )
+    .stTextInput label {{
+        color: #CBD5E1 !important;
+    }}
 
-            st.markdown("<br>", unsafe_allow_html=True)
+    div[data-testid="stForm"] button[type="submit"] {{
+        background-color: #EF4444 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        padding: 0.6rem 1rem !important;
+    }}
+    </style>
+    """
+    st.markdown(custom_css, unsafe_allow_html=True)
 
-            entrar = st.form_submit_button(
-                "Entrar", type="primary", use_container_width=True
-            )
+    col_left, col_right = st.columns([1.2, 0.8], gap="large")
 
-        if entrar:
-            if fazer_login(login_input, senha_input):
-                st.rerun()
-            else:
-                st.error("Usuário ou senha inválidos.")
+    with col_left:
+        html_conteudo = """
+        <div class="brand-title">🏛️ Reserva de Salas</div>
+        <div class="brand-subtitle">SISTEMA ACADÂMICO</div>
+        <h1 class="hero-title">Mais que salas,<br><span class="hero-title-highlight">oportunidades.</span></h1>
+        <p class="hero-desc">Reserve espaços da sua instituição de forma simples, rápida e segura. Aqui, cada sala é um passo para grandes ideias.</p>
+        <div class="card-grid">
+            <div class="category-card"><span class="category-icon">🖥️</span><span class="category-text">Salas de Aula</span></div>
+            <div class="category-card"><span class="category-icon">🧪</span><span class="category-text">Laboratórios</span></div>
+            <div class="category-card"><span class="category-icon">🔧</span><span class="category-text">Oficinas</span></div>
+            <div class="category-card"><span class="category-icon">👥</span><span class="category-text">Auditórios</span></div>
+        </div>
+        <div class="footer-text">TECNOLOGIA A SERVIÇO DA SUA JORNADA ACADÊMICA.</div>
+        """
+        st.markdown(html_conteudo, unsafe_allow_html=True)
 
-        with st.expander("Contas de demonstração"):
-            st.caption("**Locatário:** usuário `marcos` · senha `1234`")
-            st.caption("**Proprietário:** usuário `ana` · senha `1234`")
+    with col_right:
+        with st.form("login_form"):
+            st.markdown("<h2 style='color: white; font-size: 1.8rem; margin-bottom: 0.2rem;'>Bem-vindo de volta!</h2>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 1.5rem;'>Faça login para continuar com a reserva de salas.</p>", unsafe_allow_html=True)
+            
+            usuario_input = st.text_input("Usuário", placeholder="Digite seu usuário")
+            senha_input = st.text_input("Senha", type="password", placeholder="Digite sua senha")
+            
+            btn_login = st.form_submit_button("Entrar", use_container_width=True)
+            
+            if btn_login:
+                if usuario_input and senha_input:
+                    # Dicionário completo contendo todas as chaves exigidas pelo app.py e main.py
+                    st.session_state["usuario"] = {
+                        "id": 1,
+                        "nome": usuario_input,
+                        "login": usuario_input,
+                        "email": f"{usuario_input}@exemplo.com",
+                        "tipo": "Administrador"
+                    }
+                    st.rerun()
+                else:
+                    st.error("Preencha todos os campos.")
