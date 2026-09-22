@@ -1,4 +1,5 @@
-﻿import streamlit as st
+﻿```python
+import streamlit as st
 from utils.estado import sala_por_id
 
 
@@ -75,19 +76,27 @@ def render_lista_reservas(lista, mostrar_cliente=False):
         sala = sala_por_id(r["sala_id"])
         cols = st.columns([2, 2, 1.2, 1.5, 1]) if mostrar_cliente else st.columns([2, 1.2, 1.5, 1])
         i = 0
+
         with cols[i]:
             st.write(f"**{sala['nome']}**")
+
         i += 1
+
         if mostrar_cliente:
             with cols[i]:
                 st.write(r["cliente"])
             i += 1
+
         with cols[i]:
             st.write(r["data"])
+
         i += 1
+
         with cols[i]:
             st.write(r["horario"])
+
         i += 1
+
         with cols[i]:
             if r["status"] == "Confirmada":
                 st.success(r["status"])
@@ -98,16 +107,18 @@ def render_lista_reservas(lista, mostrar_cliente=False):
 def render_sala_card(sala, coluna, contexto, usuario_atual_nome):
     with coluna:
         favoritada = sala["id"] in st.session_state.favoritos
+
         st.markdown(f"""
         <div class="sala">
-            <div class="sala-titulo">ðŸ¢ {sala['nome']}</div>
-            <div class="sala-info">ðŸ‘¥ Capacidade: {sala['capacidade']} pessoas</div>
-            <div class="sala-info">ðŸ–¥ï¸ {sala['recursos']}</div>
-            <div class="sala-info">ðŸ“ {sala['andar']}</div>
+            <div class="sala-titulo">🏢 {sala['nome']}</div>
+            <div class="sala-info">👥 Capacidade: {sala['capacidade']} pessoas</div>
+            <div class="sala-info">🖥️ {sala['recursos']}</div>
+            <div class="sala-info">📍 {sala['andar']}</div>
         </div>
         """, unsafe_allow_html=True)
 
         col_reservar, col_fav = st.columns([2, 1])
+
         with col_reservar:
             if st.button("Reservar", key=f"reservar_{contexto}_{sala['id']}"):
                 st.session_state.reservas.append({
@@ -117,13 +128,17 @@ def render_sala_card(sala, coluna, contexto, usuario_atual_nome):
                     "horario": st.session_state.get("busca_horario_fmt", "A definir"),
                     "status": "Pendente",
                 })
+
                 st.success(f"{sala['nome']} reservada! Veja em 'Minhas Reservas'.")
+
         with col_fav:
-            rotulo = "ðŸ’›" if favoritada else "ðŸ¤"
+            rotulo = "💛" if favoritada else "🤍"
+
             if st.button(rotulo, key=f"fav_{contexto}_{sala['id']}"):
                 if favoritada:
                     st.session_state.favoritos.discard(sala["id"])
                 else:
                     st.session_state.favoritos.add(sala["id"])
-                st.rerun()
 
+                st.rerun()
+```
