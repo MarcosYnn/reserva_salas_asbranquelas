@@ -21,7 +21,7 @@ import main
 
 st.set_page_config(
     page_title="Reserva de Salas",
-    page_icon="ðŸ¢",
+    page_icon="🏢",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -33,7 +33,7 @@ inicializar_estado()
 # LINKS RECEBIDOS POR E-MAIL
 # Streamlit não tem rotas de verdade — os links de confirmação e de
 # redefiniçåo de senha chegam como parametros na propria URL do app
-# (?confirmar=TOKEN ou ?redefinir=TOKEN) e são tratados aqui, antes
+# (confirmar=TOKEN ou redefinir=TOKEN) e são tratados aqui, antes
 # de qualquer outra coisa, tanto logado quanto deslogado.
 # ==========================================
 
@@ -92,11 +92,11 @@ with st.sidebar:
     st.markdown("Reserva de Salas")
     st.divider()
 
-    st.markdown(f"### {usuario['nome']}")
+    st.markdown(f" {usuario['nome']}")
     st.caption(f"Conta de {usuario['tipo']}")
 
     st.divider()
-    st.markdown("### Menu")
+    st.markdown(" Menu")
 
     pagina = st.radio(
         "Navegação",
