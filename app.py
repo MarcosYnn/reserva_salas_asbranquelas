@@ -105,7 +105,7 @@ with st.sidebar:
     )
 
     st.divider()
-    if st.button("ðŸšª Sair"):
+    if st.button(" Sair"):
         fazer_logout()
         st.rerun()
 
