@@ -1,6 +1,8 @@
 ﻿from datetime import date, time
 import streamlit as st
 
+from views.admin_view import renderizar_admin_usuarios
+
 from utils.estado import (
     sala_por_id, reservas_de, salas_de, reservas_das_salas, adicionar_sala,
     listar_usuarios_admin, alterar_tipo_usuario_admin,
@@ -263,6 +265,7 @@ def pagina_perfil_proprietario(usuario):
 
 def pagina_admin(usuario):
     exigir_tipo(usuario, [TIPO_ADMIN])
+    renderizar_admin_usuarios(usuario)
 
     st.markdown('<div class="titulo">Administração ¸</div>', unsafe_allow_html=True)
     st.markdown(
@@ -368,3 +371,4 @@ def render_pagina(pagina, usuario):
     funcao = paginas.get(pagina, next(iter(paginas.values())))
     funcao(usuario)
 
+from views.admin_view import renderizar_admin_usuarios
