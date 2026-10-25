@@ -267,69 +267,6 @@ def pagina_admin(usuario):
     exigir_tipo(usuario, [TIPO_ADMIN])
     renderizar_admin_usuarios(usuario)
 
-    st.markdown('<div class="titulo">Administracao</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="subtitulo">Gerencie as contas cadastradas no sistema.</div>',
-        unsafe_allow_html=True,
-    )
-
-    usuarios = listar_usuarios_admin()
-
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        render_card(" Total de contas", len(usuarios), "No sistema")
-    with col2:
-        confirmadas = len([u for u in usuarios if u["email_confirmado"]])
-        render_card(" E-mails confirmados", confirmadas, f"de {len(usuarios)}")
-    with col3:
-        admins = len([u for u in usuarios if u["tipo"] == TIPO_ADMIN])
-        render_card(" Administradores", admins, "Contas com acesso total")
-
-    render_secao_titulo("Contas cadastradas")
-
-    for dados in usuarios:
-        cols = st.columns([2, 2, 1.2, 1.2, 1.2, 1, 1])
-        with cols[0]:
-            st.write(f"**{dados['nome_completo'] or dados['nome_usuario']}**")
-            st.caption(f"@{dados['nome_usuario']}")
-        with cols[1]:
-            st.write(dados["email"])
-        with cols[2]:
-            st.write(" Confirmado" if dados["email_confirmado"] else " Pendente")
-            st.caption(" Ativo" if dados["ativo"] else " Bloqueado")
-        with cols[3]:
-            novo_tipo = st.selectbox(
-                "Tipo", [TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN],
-                index=([TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN].index(dados["tipo"]) if dados["tipo"] in [TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN] else 0),
-                key=f"tipo_{dados['id']}", label_visibility="collapsed",
-            )
-            if novo_tipo != dados["tipo"]:
-                alterar_tipo_usuario_admin(dados["id"], novo_tipo)
-                st.rerun()
-        with cols[4]:
-            if not dados["email_confirmado"]:
-                if st.button("Confirmar", key=f"confirmar_{dados['id']}"):
-                    confirmar_email_manualmente_admin(dados["id"])
-                    st.rerun()
-        with cols[5]:
-            if dados["id"] != usuario["id"]:
-                if dados["ativo"]:
-                    if st.button(" Bloquear", key=f"bloquear_{dados['id']}"):
-                        desativar_usuario_admin(dados["id"])
-                        st.rerun()
-                else:
-                    if st.button(" Reativar", key=f"reativar_{dados['id']}"):
-                        ativar_usuario_admin(dados["id"])
-                        st.rerun()
-        with cols[6]:
-            if dados["id"] != usuario["id"]:
-                if st.button(" Excluir", key=f"excluir_{dados['id']}"):
-                    excluir_usuario_admin(dados["id"])
-                    st.rerun()
-        st.divider()
-
-
-
 
 PAGINAS_LOCATARIO = {
     "Dashboard": pagina_dashboard_locatario,
@@ -370,5 +307,3 @@ def render_pagina(pagina, usuario):
     paginas = PAGINAS_POR_TIPO.get(usuario["tipo"], PAGINAS_LOCATARIO)
     funcao = paginas.get(pagina, next(iter(paginas.values())))
     funcao(usuario)
-
-from views.admin_view import renderizar_admin_usuarios
