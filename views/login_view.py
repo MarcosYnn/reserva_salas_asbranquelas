@@ -5,7 +5,7 @@ from utils.estado import fazer_login
 
 def pagina_login():
     # Divisão principal: Painel Esquerdo (Apresentação) | Painel Direito (Login)
-    col_esquerda, col_direita = st.columns([1.1, 1], gap="large")
+    col_esquerda, col_direita = st.columns([1.4, 1], gap="none")
 
     # --- PAINEL ESQUERDO (Apresentação) ---
     with col_esquerda:
