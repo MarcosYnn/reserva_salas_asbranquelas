@@ -16,7 +16,7 @@ def pagina_login():
         )
 
         with col_logo:
-            diretorio_base = os.path.dirname(os.path.abspath(__file__))
+            diretorio_base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             caminho_logo = os.path.join(diretorio_base, "assets", "logo.png")
 
             if os.path.exists(caminho_logo):
