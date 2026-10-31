@@ -1,125 +1,207 @@
-﻿import os
+﻿import base64
+import os
+
 import streamlit as st
 from utils.estado import fazer_login
 
 
+def aplicar_fundo_login():
+    diretorio_projeto = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )
+    caminho_fundo = os.path.join(
+        diretorio_projeto,
+        "assets",
+        "sala.png",
+    )
+
+    if not os.path.isfile(caminho_fundo):
+        return
+
+    with open(caminho_fundo, "rb") as arquivo:
+        imagem_base64 = base64.b64encode(arquivo.read()).decode("ascii")
+
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image:
+                linear-gradient(
+                    rgba(8, 12, 22, 0.42),
+                    rgba(8, 12, 22, 0.42)
+                ),
+                url("data:image/png;base64,{imagem_base64}") !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-attachment: fixed !important;
+        }}
+
+        [data-testid="stAppViewContainer"],
+        [data-testid="stMain"] {{
+            background-color: transparent !important;
+        }}
+
+        /* Barra superior transparente, com controles brancos */
+        header[data-testid="stHeader"],
+        [data-testid="stHeader"],
+        [data-testid="stAppHeader"],
+        [data-testid="stToolbar"] {{
+            background: transparent !important;
+            box-shadow: none !important;
+            color: #ffffff !important;
+        }}
+
+        [data-testid="stHeader"] *,
+        [data-testid="stToolbar"] * {{
+            color: #ffffff !important;
+            fill: #ffffff !important;
+        }}
+
+        /* Textos da tela em branco */
+        .stApp [data-testid="stMarkdownContainer"] *,
+        .stApp [data-testid="stWidgetLabel"] *,
+        .stApp [data-testid="stExpander"] * {{
+            color: #ffffff !important;
+        }}
+
+        /* Única palavra em azul */
+        .stApp [data-testid="stMarkdownContainer"] .hero-highlight {{
+            color: #60a5fa !important;
+        }}
+
+        /* Campos escuros translúcidos, com texto branco */
+        .stApp [data-testid="stTextInput"] input {{
+            color: #ffffff !important;
+            background: rgba(15, 23, 42, 0.62) !important;
+            border-color: rgba(255, 255, 255, 0.35) !important;
+        }}
+
+        .stApp [data-testid="stTextInput"] input::placeholder {{
+            color: rgba(255, 255, 255, 0.72) !important;
+        }}
+
+        /* Botão de login */
+        .stApp [data-testid="stFormSubmitButton"] button {{
+            color: #ffffff !important;
+            background-color: #ef4444 !important;
+            border: none !important;
+        }}
+
+        .stApp [data-testid="stFormSubmitButton"] button * {{
+            color: #ffffff !important;
+        }}
+
+        /* Cards translúcidos */
+        .stApp .feature-card {{
+            background: rgba(15, 23, 42, 0.48);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            padding: 12px 6px;
+            text-align: center;
+        }}
+
+        /* Formulário e contas de demonstração */
+        .stApp [data-testid="stForm"],
+        .stApp [data-testid="stExpander"] {{
+            background: rgba(15, 23, 42, 0.42) !important;
+            border: 1px solid rgba(255, 255, 255, 0.24) !important;
+            border-radius: 10px !important;
+        }}
+
+        .stApp [data-testid="stAlert"] * {{
+            color: #ffffff !important;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def renderizar_categoria(icone, texto):
+    st.markdown(
+        f"""
+        <div class="feature-card">
+            <span style="font-size: 22px;">{icone}</span><br>
+            <span>{texto}</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def pagina_login():
-    # Divisão principal: Painel Esquerdo (Apresentação) | Painel Direito (Login)
-    col_esquerda, col_direita = st.columns([1.1, 1], gap="large")
+    aplicar_fundo_login()
 
-    # --- PAINEL ESQUERDO (Apresentação) ---
+    col_esquerda, col_direita = st.columns(
+        [1.1, 1],
+        gap="large",
+    )
+
+    # Painel esquerdo: apresentação
     with col_esquerda:
-        # Cabeçalho com logotipo
-        col_logo, col_titulo = st.columns(
-            [0.28, 0.72],
-            vertical_alignment="center"
+        st.markdown(
+            '<div class="brand-title">Reserva de Salas</div>'
+            '<div class="brand-subtitle">Sistema Acadêmico</div>',
+            unsafe_allow_html=True,
         )
-
-        with col_logo:
-            diretorio_base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            caminho_logo = os.path.join(diretorio_base, "assets", "logo.png")
-
-            if os.path.exists(caminho_logo):
-                st.image(caminho_logo, width=85)
-            else:
-                st.text("🏢")
-
-        with col_titulo:
-            st.markdown(
-                '<div style="line-height: 1.2;">'
-                '<span style="font-size: 22px; font-weight: bold; color: #0f172a;">Reserva de Salas</span><br>'
-                '<span style="font-size: 13px; color: #475569; font-weight: 500;">Sistema Acadêmico</span>'
-                '</div>',
-                unsafe_allow_html=True,
-            )
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Título principal em preto e azul
         st.markdown(
-            '<h1 style="font-size: 36px; font-weight: 800; color: #0f172a; margin-bottom: 10px;">'
-            'Mais que salas,<br><span style="color: #2563eb;">oportunidades.</span>'
+            '<h1 class="hero-title">'
+            'Mais que salas,<br>'
+            '<span class="hero-highlight">oportunidades.</span>'
             "</h1>",
             unsafe_allow_html=True,
         )
 
-        # Subtítulo legível em cinza escuro/preto
         st.markdown(
-            '<p style="color: #334155; font-size: 15px; line-height: 1.5; font-weight: 400;">'
-            "Reserve espaços da sua instituição de forma simples, rápida e segura. "
-            "Aqui, cada sala é um passo para grandes ideias."
+            '<p class="hero-description">'
+            "Reserve espaços da sua instituição de forma simples, "
+            "rápida e segura. Aqui, cada sala é um passo para grandes ideias."
             "</p>",
             unsafe_allow_html=True,
         )
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Cartões de categorias em tons claros com texto escuro
         cat1, cat2, cat3, cat4 = st.columns(4)
 
         with cat1:
-            st.markdown(
-                '<div style="text-align: center; padding: 12px 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;">'
-                '<span style="font-size: 22px;">💻</span><br>'
-                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">Salas de Aula</span>'
-                "</div>",
-                unsafe_allow_html=True,
-            )
+            renderizar_categoria("💻", "Salas de Aula")
 
         with cat2:
-            st.markdown(
-                '<div style="text-align: center; padding: 12px 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;">'
-                '<span style="font-size: 22px;">🧪</span><br>'
-                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">Laboratórios</span>'
-                "</div>",
-                unsafe_allow_html=True,
-            )
+            renderizar_categoria("🧪", "Laboratórios")
 
         with cat3:
-            st.markdown(
-                '<div style="text-align: center; padding: 12px 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;">'
-                '<span style="font-size: 22px;">🛠️</span><br>'
-                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">Oficinas</span>'
-                "</div>",
-                unsafe_allow_html=True,
-            )
+            renderizar_categoria("🛠️", "Oficinas")
 
         with cat4:
-            st.markdown(
-                '<div style="text-align: center; padding: 12px 6px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;">'
-                '<span style="font-size: 22px;">🎭</span><br>'
-                '<span style="font-size: 12px; color: #0f172a; font-weight: 600;">Auditórios</span>'
-                "</div>",
-                unsafe_allow_html=True,
-            )
+            renderizar_categoria("🎭", "Auditórios")
 
         st.markdown("<br><br>", unsafe_allow_html=True)
 
         st.markdown(
-            '<p style="font-size: 11px; letter-spacing: 1.5px; color: #475569; font-weight: 700;">'
+            '<p class="footer-text">'
             "TECNOLOGIA A SERVIÇO DA SUA JORNADA ACADÊMICA."
             "</p>",
             unsafe_allow_html=True,
         )
 
-    # --- PAINEL DIREITO (Formulário) ---
+    # Painel direito: login
     with col_direita:
         st.markdown(
-            '<div style="text-align: right; color: #475569; font-size: 12px; margin-bottom: 20px; font-weight: 600;">'
-            "🔒 Acesso Restrito"
-            "</div>",
+            '<div class="access-label">🔒 Acesso Restrito</div>',
             unsafe_allow_html=True,
         )
 
         st.markdown(
-            '<h2 style="font-size: 26px; font-weight: bold; color: #0f172a; margin-bottom: 4px;">'
-            "Bem-vindo de volta!"
-            "</h2>",
+            '<h2 class="login-title">Bem-vindo de volta!</h2>',
             unsafe_allow_html=True,
         )
 
         st.markdown(
-            '<p style="color: #475569; font-size: 14px; margin-bottom: 24px;">'
+            '<p class="login-description">'
             "Faça login para continuar com a reserva de salas."
             "</p>",
             unsafe_allow_html=True,
@@ -128,21 +210,19 @@ def pagina_login():
         with st.form("form_login_moderno"):
             login_input = st.text_input(
                 "Usuário",
-                placeholder="Digite seu usuário"
+                placeholder="Digite seu usuário",
             )
 
             senha_input = st.text_input(
                 "Senha",
                 type="password",
-                placeholder="Digite sua senha"
+                placeholder="Digite sua senha",
             )
-
-            st.markdown("<br>", unsafe_allow_html=True)
 
             entrar = st.form_submit_button(
                 "Entrar",
                 type="primary",
-                use_container_width=True
+                use_container_width=True,
             )
 
         if entrar:
