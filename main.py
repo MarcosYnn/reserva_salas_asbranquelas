@@ -1,4 +1,4 @@
-﻿from datetime import date, time
+from datetime import date, time
 import streamlit as st
 
 from utils.estado import (
@@ -13,13 +13,13 @@ from controllers.autorizacao_controller import exigir_tipo
 
 
 # ==========================================
-# # PAGINAS - LOCATARIO
+# # PÁGINAS - LOCATÁRIO
 # ==========================================
 
 def pagina_dashboard_locatario(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
-    st.markdown(f'<div class="titulo">Ola, {usuario["nome"].split()[0]}! </div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="titulo">OlÃ¡, {usuario["nome"].split()[0]}! ðŸ‘‹</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitulo">Encontre uma sala para o seu proximo compromisso.</div>', unsafe_allow_html=True)
 
     minhas_reservas = reservas_de(usuario["nome"])
@@ -30,58 +30,58 @@ def pagina_dashboard_locatario(usuario):
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        render_card(" Reservas hoje", len(reservas_hoje), f"{len(confirmadas_hoje)} confirmacao(oes)")
+        render_card("ðŸ“… Reservas hoje", len(reservas_hoje), f"{len(confirmadas_hoje)} confirmação(ões)")
     with col2:
-        render_card(" Salas cadastradas", len(st.session_state.salas), "No sistema")
+        render_card("ðŸ¢ Salas cadastradas", len(st.session_state.salas), "No sistema")
     with col3:
-        render_card(" Minhas reservas", len(minhas_reservas), "Total ativo")
+        render_card("ðŸ“‹ Minhas reservas", len(minhas_reservas), "Total ativo")
     with col4:
         if proxima:
             sala = sala_por_id(proxima["sala_id"])
-            render_card("⏰ Proxima reserva", proxima["horario"].split(" - ")[0], sala["nome"])
+            render_card("â° Próxima reserva", proxima["horario"].split(" - ")[0], sala["nome"])
         else:
-            render_card("⏰ Proxima reserva", "—", "Nenhuma agendada")
+            render_card("â° Próxima reserva", "â€”", "Nenhuma agendada")
 
     if proxima:
         sala = sala_por_id(proxima["sala_id"])
         st.markdown(f"""
         <div class="secao">
-            <div class="secao-titulo"> Minha proxima reserva</div>
+            <div class="secao-titulo">ðŸ“… Minha próxima reserva</div>
             <div class="reserva">
-                <div class="reserva-titulo"> {sala['nome']}</div>
+                <div class="reserva-titulo">ðŸ¢ {sala['nome']}</div>
                 <div class="reserva-info">
-                     {proxima['data']} &nbsp;&nbsp;|&nbsp;&nbsp;
-                    ⏰ {proxima['horario']} &nbsp;&nbsp;|&nbsp;&nbsp;
-                     ate {sala['capacidade']} pessoas
+                    ðŸ“… {proxima['data']} &nbsp;&nbsp;|&nbsp;&nbsp;
+                    â° {proxima['horario']} &nbsp;&nbsp;|&nbsp;&nbsp;
+                    ðŸ‘¥ atÃ© {sala['capacidade']} pessoas
                 </div>
-                <div class="reserva-info"> {sala['andar']}</div>
+                <div class="reserva-info">ðŸ“ {sala['andar']}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-    render_secao_titulo(" Minhas proximas reservas")
+    render_secao_titulo("ðŸ“‹ Minhas próximas reservas")
     render_lista_reservas(minhas_reservas)
 
 
 def pagina_buscar_salas(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
-    st.markdown('<div class="titulo">Buscar Salas </div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitulo">Filtre por data, horario e capacidade.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="titulo">Buscar Salas ðŸ”Ž</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitulo">Filtre por data, horário e capacidade.</div>', unsafe_allow_html=True)
 
-    render_secao_titulo(" Encontre uma sala disponivel")
+    render_secao_titulo("ðŸ”Ž Encontre uma sala disponívél")
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         data_busca = st.date_input("Data", value=date(2026, 8, 17))
     with col2:
-        horario_inicio = st.time_input("Horario inicial", value=time(9, 0))
+        horario_inicio = st.time_input("Horário inicial", value=time(9, 0))
     with col3:
-        horario_fim = st.time_input("Horario final", value=time(10, 0))
+        horario_fim = st.time_input("Horário final", value=time(10, 0))
     with col4:
         pessoas = st.number_input("Quantidade de pessoas", min_value=1, value=4)
 
-    if st.button(" Procurar salas", type="primary"):
+    if st.button("ðŸ”Ž Procurar salas", type="primary"):
         st.session_state.busca_data_fmt = data_busca.strftime("%d/%m/%Y")
         st.session_state.busca_horario_fmt = f"{horario_inicio.strftime('%H:%M')} - {horario_fim.strftime('%H:%M')}"
 
@@ -99,33 +99,33 @@ def pagina_buscar_salas(usuario):
     resultado = st.session_state.resultado_busca
     if resultado is not None:
         if resultado:
-            st.success(f"Encontramos {len(resultado)} sala(s) disponivel(is)!")
+            st.success(f"Encontramos {len(resultado)} sala(s) disponívél(is)!")
             colunas = st.columns(3)
             for idx, sala in enumerate(resultado):
                 render_sala_card(sala, colunas[idx % 3], contexto="busca", usuario_atual_nome=usuario["nome"])
         else:
-            st.warning("Nenhuma sala livre para esses criterios. Tente outro horario ou capacidade.")
+            st.warning("Nenhuma sala livre para esses critérios. Tente outro horário ou capacidade.")
 
 
 def pagina_minhas_reservas(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
-    st.markdown('<div class="titulo">Minhas Reservas </div>', unsafe_allow_html=True)
-    render_secao_titulo(" Todas as suas reservas")
-    render_lista_reservas(reservas_de(usuario["nome"]), permitir_cancelar=True)
+    st.markdown('<div class="titulo">Minhas Reservas ðŸ“…</div>', unsafe_allow_html=True)
+    render_secao_titulo("ðŸ“‹ Todas as suas reservas")
+    render_lista_reservas(reservas_de(usuario["nome"]))
 
 
 def pagina_favoritos(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
-    st.markdown('<div class="titulo">Favoritos </div>', unsafe_allow_html=True)
+    st.markdown('<div class="titulo">Favoritos â¤ï¸</div>', unsafe_allow_html=True)
     favoritas = [s for s in st.session_state.salas if s["id"] in st.session_state.favoritos]
 
     if not favoritas:
-        st.caption("Voce ainda nao favoritou nenhuma sala. Va em 'Buscar Salas' e clique no coracao .")
+        st.caption("Voce ainda nao favoritou nenhuma sala. Vá em 'Buscar Salas' e clique no coração ðŸ¤.")
         return
 
-    render_secao_titulo(" Salas favoritas")
+    render_secao_titulo("â¤ï¸ Salas favoritas")
     colunas = st.columns(3)
     for idx, sala in enumerate(favoritas):
         render_sala_card(sala, colunas[idx % 3], contexto="favoritos", usuario_atual_nome=usuario["nome"])
@@ -134,7 +134,7 @@ def pagina_favoritos(usuario):
 def pagina_perfil(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
-    st.markdown('<div class="titulo">Meu Perfil </div>', unsafe_allow_html=True)
+    st.markdown('<div class="titulo">Meu Perfil ðŸ‘¤</div>', unsafe_allow_html=True)
     render_secao_titulo("Dados do usuario")
     st.write(f"**Nome:** {usuario['nome']}")
     st.write(f"**Tipo de conta:** {usuario['tipo']}")
@@ -143,13 +143,13 @@ def pagina_perfil(usuario):
 
 
 # ==========================================
-# PAGINAS - PROPRIETARIO
+# PAGINAS - PROPRIETÁRIO
 # ==========================================
 
 def pagina_dashboard_proprietario(usuario):
     exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
 
-    st.markdown(f'<div class="titulo">Ola, {usuario["nome"].split()[0]}! </div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="titulo">Olá, {usuario["nome"].split()[0]}! 👋</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitulo">Acompanhe suas salas e reservas.</div>', unsafe_allow_html=True)
 
     minhas_salas = salas_de(usuario["login"])
@@ -164,11 +164,11 @@ def pagina_dashboard_proprietario(usuario):
     with col2:
         render_card(" Reservas recebidas", len(reservas_recebidas), f"{confirmadas} confirmadas")
     with col3:
-        render_card(" Faturamento", "R$ 2.450", "Este mes")
+        render_card(" Faturamento", "R$ 2.450", "Este mês")
     with col4:
-        render_card(" Taxa de confirmacao", f"{taxa}%", "Sobre reservas recebidas")
+        render_card(" Taxa de confirmação", f"{taxa}%", "Sobre reservas recebidas")
 
-    render_secao_titulo(" Resumo de ocupacao")
+    render_secao_titulo(" Resumo de ocupação")
     st.line_chart({"Semana 1": 45, "Semana 2": 62, "Semana 3": 55, "Semana 4": 72})
 
     render_secao_titulo(" Reservas recentes nas suas salas")
@@ -182,9 +182,9 @@ def pagina_dashboard_proprietario(usuario):
                 nome = st.text_input("Nome da sala")
                 capacidade = st.number_input("Capacidade", min_value=1, value=4)
             with col2:
-                localizacao = st.text_input("Localizacao (ex: 2o andar)")
+                localizacao = st.text_input("Localização (ex: 2º andar)")
 
-            st.caption("Recursos disponiveis")
+            st.caption("Recursos disponí­veis")
             rc1, rc2, rc3 = st.columns(3)
             with rc1:
                 projetor = st.checkbox("Projetor")
@@ -226,12 +226,12 @@ def pagina_dashboard_proprietario(usuario):
 def pagina_minhas_salas(usuario):
     exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
 
-    st.markdown('<div class="titulo">Minhas Salas </div>', unsafe_allow_html=True)
-    render_secao_titulo("Salas cadastradas por voce")
+    st.markdown('<div class="titulo">Minhas Salas ðŸ¢</div>', unsafe_allow_html=True)
+    render_secao_titulo("Salas cadastradas por você")
 
     minhas_salas = salas_de(usuario["login"])
     if not minhas_salas:
-        st.caption("Voce ainda nao cadastrou nenhuma sala.")
+        st.caption("Você ainda não cadastrou nenhuma sala.")
         return
 
     colunas = st.columns(3)
@@ -239,10 +239,10 @@ def pagina_minhas_salas(usuario):
         with colunas[idx % 3]:
             st.markdown(f"""
             <div class="sala">
-                <div class="sala-titulo"> {sala['nome']}</div>
-                <div class="sala-info"> Capacidade: {sala['capacidade']} pessoas</div>
-                <div class="sala-info"> {sala['recursos']}</div>
-                <div class="sala-info"> {sala['andar']}</div>
+                <div class="sala-titulo">ðŸ¢ {sala['nome']}</div>
+                <div class="sala-info">ðŸ‘¥ Capacidade: {sala['capacidade']} pessoas</div>
+                <div class="sala-info">ðŸ–¥ï¸ {sala['recursos']}</div>
+                <div class="sala-info">ðŸ“ {sala['andar']}</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -250,21 +250,21 @@ def pagina_minhas_salas(usuario):
 def pagina_perfil_proprietario(usuario):
     exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
 
-    st.markdown('<div class="titulo">Meu Perfil</div>', unsafe_allow_html=True)
-    render_secao_titulo("Dados do usuario")
+    st.markdown('<div class="titulo">Meu Perfil ðŸ‘¤</div>', unsafe_allow_html=True)
+    render_secao_titulo("Dados do usuário")
     st.write(f"**Nome:** {usuario['nome']}")
     st.write(f"**Tipo de conta:** {usuario['tipo']}")
     st.write(f"**Salas cadastradas:** {len(salas_de(usuario['login']))}")
 
 
 # ==========================================
-# PAGINAS - ADMINISTRADOR
+# PÁGINAS - ADMINISTRADOR
 # ==========================================
 
 def pagina_admin(usuario):
     exigir_tipo(usuario, [TIPO_ADMIN])
 
-    st.markdown('<div class="titulo">Administracao</div>', unsafe_allow_html=True)
+    st.markdown('<div class="titulo">Administração ¸</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="subtitulo">Gerencie as contas cadastradas no sistema.</div>',
         unsafe_allow_html=True,
@@ -282,7 +282,7 @@ def pagina_admin(usuario):
         admins = len([u for u in usuarios if u["tipo"] == TIPO_ADMIN])
         render_card(" Administradores", admins, "Contas com acesso total")
 
-    render_secao_titulo("Contas cadastradas")
+    render_secao_titulo(" Contas cadastradas")
 
     for dados in usuarios:
         cols = st.columns([2, 2, 1.2, 1.2, 1.2, 1, 1])
@@ -297,7 +297,7 @@ def pagina_admin(usuario):
         with cols[3]:
             novo_tipo = st.selectbox(
                 "Tipo", [TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN],
-                index=([TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN].index(dados["tipo"]) if dados["tipo"] in [TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN] else 0),
+                index=[TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN].index(dados["tipo"]),
                 key=f"tipo_{dados['id']}", label_visibility="collapsed",
             )
             if novo_tipo != dados["tipo"]:
@@ -342,11 +342,11 @@ PAGINAS_PROPRIETARIO = {
     "Perfil": pagina_perfil_proprietario,
 }
 
-# O administrador tem acesso total: todas as paginas de proprietario
+# O administrador tem acesso total: todas as páginas de proprietário
 # (para poder gerenciar salas do sistema) mais o painel de contas.
 PAGINAS_ADMIN = {
     **PAGINAS_PROPRIETARIO,
-    "Administracao": pagina_admin,
+    " Administração": pagina_admin,
 }
 
 PAGINAS_POR_TIPO = {
@@ -358,7 +358,7 @@ PAGINAS_POR_TIPO = {
 
 def menu_para(tipo_usuario):
     """app.py usa isso para saber quais itens mostrar no menu,
-    ja que cada tipo de conta tem paginas diferentes."""
+    já que cada tipo de conta tem paginas diferentes."""
     paginas = PAGINAS_POR_TIPO.get(tipo_usuario, PAGINAS_LOCATARIO)
     return list(paginas.keys())
 
