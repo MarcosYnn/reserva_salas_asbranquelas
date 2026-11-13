@@ -41,7 +41,6 @@ def aplicar_fundo_login():
             background-color: transparent !important;
         }}
 
-        /* Barra superior transparente, com controles brancos */
         header[data-testid="stHeader"],
         [data-testid="stHeader"],
         [data-testid="stAppHeader"],
@@ -57,19 +56,16 @@ def aplicar_fundo_login():
             fill: #ffffff !important;
         }}
 
-        /* Textos da tela em branco */
         .stApp [data-testid="stMarkdownContainer"] *,
         .stApp [data-testid="stWidgetLabel"] *,
         .stApp [data-testid="stExpander"] * {{
             color: #ffffff !important;
         }}
 
-        /* Única palavra em azul */
         .stApp [data-testid="stMarkdownContainer"] .hero-highlight {{
             color: #60a5fa !important;
         }}
 
-        /* Campos escuros translúcidos, com texto branco */
         .stApp [data-testid="stTextInput"] input {{
             color: #ffffff !important;
             background: rgba(15, 23, 42, 0.62) !important;
@@ -80,7 +76,6 @@ def aplicar_fundo_login():
             color: rgba(255, 255, 255, 0.72) !important;
         }}
 
-        /* Botão de login */
         .stApp [data-testid="stFormSubmitButton"] button {{
             color: #ffffff !important;
             background-color: #ef4444 !important;
@@ -91,7 +86,6 @@ def aplicar_fundo_login():
             color: #ffffff !important;
         }}
 
-        /* Cards translúcidos */
         .stApp .feature-card {{
             background: rgba(15, 23, 42, 0.48);
             border: 1px solid rgba(255, 255, 255, 0.25);
@@ -100,7 +94,6 @@ def aplicar_fundo_login():
             text-align: center;
         }}
 
-        /* Formulário e contas de demonstração */
         .stApp [data-testid="stForm"],
         .stApp [data-testid="stExpander"] {{
             background: rgba(15, 23, 42, 0.42) !important;
@@ -137,7 +130,6 @@ def pagina_login():
         gap="large",
     )
 
-    # Painel esquerdo: apresentação
     with col_esquerda:
         st.markdown(
             '<div class="brand-title">Reserva de Salas</div>'
@@ -149,7 +141,7 @@ def pagina_login():
 
         st.markdown(
             '<h1 class="hero-title">'
-            'Mais que salas,<br>'
+            "Mais que salas,<br>"
             '<span class="hero-highlight">oportunidades.</span>'
             "</h1>",
             unsafe_allow_html=True,
@@ -188,7 +180,6 @@ def pagina_login():
             unsafe_allow_html=True,
         )
 
-    # Painel direito: login
     with col_direita:
         st.markdown(
             '<div class="access-label">🔒 Acesso Restrito</div>',
@@ -208,7 +199,7 @@ def pagina_login():
         )
 
         with st.form("form_login_moderno"):
-            login_input = st.text_input(
+            usuario_input = st.text_input(
                 "Usuário",
                 placeholder="Digite seu usuário",
             )
@@ -226,13 +217,13 @@ def pagina_login():
             )
 
         if entrar:
-            sucesso, mensagem = fazer_login(login_input, senha_input)
+            sucesso, mensagem = fazer_login(usuario_input, senha_input)
 
             if sucesso:
                 st.rerun()
             else:
                 st.error(mensagem)
 
-        with st.expander("Contas de demonstração"):
-            st.caption("**Locatário:** usuário `marcos`")
-            st.caption("**Proprietário:** usuário `ana`")
+        st.caption(
+            "Entre com o usuário e a senha cadastrados pelo administrador."
+        )

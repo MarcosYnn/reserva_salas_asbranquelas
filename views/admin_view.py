@@ -22,24 +22,44 @@ def _mostrar_erro(erro):
 
 
 def renderizar_admin_usuarios(usuario_atual):
-    st.markdown('<div class="titulo">Usuários Firebase</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="subtitulo">Gerencie contas no Firebase Auth e Firestore.</div>',
+        '<div class="titulo">Usuários Firebase</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="subtitulo">'
+        "Gerencie contas no Firebase Auth e Firestore."
+        "</div>",
         unsafe_allow_html=True,
     )
 
     st.subheader("Cadastrar usuário")
 
     with st.form("form_criar_usuario", clear_on_submit=True):
+        usuario = st.text_input("Usuário")
         nome = st.text_input("Nome")
         email = st.text_input("E-mail")
+        senha = st.text_input("Senha inicial", type="password")
+        confirmar_senha = st.text_input(
+            "Confirmar senha",
+            type="password",
+        )
         perfil = st.selectbox("Perfil", PERFIS)
         status = st.selectbox("Status", STATUS)
         criar = st.form_submit_button("Criar usuário", type="primary")
 
     if criar:
         try:
-            criar_usuario_admin(usuario_atual, nome, email, perfil, status)
+            criar_usuario_admin(
+                usuario_atual,
+                nome,
+                email,
+                senha,
+                confirmar_senha,
+                perfil,
+                status,
+                usuario=usuario,
+            )
             st.success("Usuário criado no Firebase.")
             st.rerun()
         except Exception as erro:
@@ -62,11 +82,17 @@ def renderizar_admin_usuarios(usuario_atual):
         uid = dados["uid"]
         nome_atual = dados.get("nome", "")
         email_atual = dados.get("email", "")
+        usuario_login_atual = dados.get("usuario", "")
 
-        with st.expander(f"{nome_atual} — {email_atual}"):
+        with st.expander(f"{nome_atual} — @{usuario_login_atual}"):
             st.caption(f"UID: {uid}")
 
             with st.form(f"form_editar_{uid}"):
+                usuario_login = st.text_input(
+                    "Usuário",
+                    value=usuario_login_atual,
+                    key=f"usuario_{uid}",
+                )
                 nome = st.text_input(
                     "Nome",
                     value=nome_atual,
@@ -76,6 +102,16 @@ def renderizar_admin_usuarios(usuario_atual):
                     "E-mail",
                     value=email_atual,
                     key=f"email_{uid}",
+                )
+                nova_senha = st.text_input(
+                    "Nova senha (deixe em branco para manter)",
+                    type="password",
+                    key=f"nova_senha_{uid}",
+                )
+                confirmar_nova_senha = st.text_input(
+                    "Confirmar nova senha",
+                    type="password",
+                    key=f"confirmar_nova_senha_{uid}",
                 )
 
                 perfil_atual = dados.get("perfil")
@@ -109,7 +145,15 @@ def renderizar_admin_usuarios(usuario_atual):
             if salvar:
                 try:
                     atualizar_usuario_admin(
-                        usuario_atual, uid, nome, email, perfil, status
+                        usuario_atual,
+                        uid,
+                        nome,
+                        email,
+                        perfil,
+                        status,
+                        nova_senha,
+                        confirmar_nova_senha,
+                        usuario=usuario_login,
                     )
                     st.success("Usuário atualizado.")
                     st.rerun()
