@@ -1,6 +1,6 @@
 ﻿import streamlit as st
 from utils.estado import sala_por_id
-
+from controllers.reservas_controller import avaliar_solicitacao
 
 def injetar_css():
     st.markdown("""
@@ -187,17 +187,39 @@ def render_sala_card(sala, coluna, contexto, usuario_atual_nome):
 
         with col_reservar:
             if st.button("Reservar", key=f"reservar_{contexto}_{sala['id']}"):
-                st.session_state.reservas.append({
-                    "sala_id": sala["id"],
-                    "cliente": usuario_atual_nome,
-                    "data": st.session_state.get("busca_data_fmt", "A definir"),
-                    "horario": st.session_state.get("busca_horario_fmt", "A definir"),
-                    "status": "Pendente",
-                })
-                st.success(f"{sala['nome']} reservada! Veja em 'Minhas Reservas'.")
+
+                data = st.session_state.get("busca_data_fmt", "A definir")
+                horario = st.session_state.get("busca_horario_fmt", "A definir")
+
+                avaliacao = avaliar_solicitacao(
+                    reservas=st.session_state.reservas,
+                    sala_id=sala["id"],
+                    data=data,
+                    horario=horario,
+                    necessita_equipamentos=False,
+                    evento_institucional=False
+                )
+
+                if avaliacao["precisa_coordenador"]:
+                    st.warning(
+                        "Conflito de horario identificado! "
+                        "A solicitacao precisa de avaliacao do coordenador."
+                    )
+                else:
+                    st.session_state.reservas.append({
+                        "sala_id": sala["id"],
+                        "cliente": usuario_atual_nome,
+                        "data": data,
+                        "horario": horario,
+                        "status": "Pendente",
+                        "prioridade": avaliacao["prioridade"]
+                    })
+
+                    st.success(
+                        f"{sala['nome']} reservada! Veja em 'Minhas Reservas'."
+                    )
 
         with col_fav:
-            # Na página Favoritos, deixa explícito que o botão remove a sala.
             rotulo = "Remover" if contexto == "favoritos" else ("💛" if favoritada else "🤍")
 
             if st.button(rotulo, key=f"fav_{contexto}_{sala['id']}"):
