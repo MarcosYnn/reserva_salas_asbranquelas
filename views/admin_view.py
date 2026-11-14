@@ -1,619 +1,165 @@
-
 import streamlit as st
-st.set_page_config(
-    page_title="Escritório Virtual",
-    page_icon="🏢",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
 from html import escape
-from textwrap import dedent
-
-from views.admin_usuarios_firebase import renderizar_admin_usuarios
-from utils.estado import usuario_logado
 
 
-# ==========================================
-# MENU ADMINISTRATIVO
-# ==========================================
-
-def menu_administrativo():
+def mostrar_admin():
+    """Painel administrativo do Sistema de Reserva de Salas."""
     if "admin_pagina" not in st.session_state:
         st.session_state.admin_pagina = "Início"
 
-    with st.container(key="admin_menu"):
-        col1, col2, col3, col4 = st.columns(
-            [1, 1, 1.5, 5],
-            gap="small"
-        )
-
-        with col1:
-            if st.button(
-                "Início",
-                key="menu_inicio",
-                use_container_width=True
-            ):
-                st.session_state.admin_pagina = "Início"
-                st.session_state.pop("admin_secao", None)
-                st.rerun()
-
-        with col2:
-            if st.button(
-                "Usuários",
-                key="menu_usuarios",
-                use_container_width=True
-            ):
-                st.session_state.admin_pagina = "Usuários"
-                st.session_state.pop("admin_secao", None)
-                st.rerun()
-
-        with col3:
-            if st.button(
-                "Configurações",
-                key="menu_configuracoes",
-                use_container_width=True
-            ):
-                st.session_state.admin_pagina = "Configurações"
-                st.session_state.pop("admin_secao", None)
-                st.rerun()
-
-
-# ==========================================
-# ESTILOS DO PAINEL
-# ==========================================
-
-def estilos_admin():
-    st.markdown("""
-    <style>
-    /* Menu lateral do protótipo */
-[data-testid="stSidebar"] {
-    background-color: #0b1020 !important;
-    border-right: none !important;
-}
-
-[data-testid="stSidebar"] * {
-    color: #c6d2e8;
-}
-
-[data-testid="stSidebar"] button {
-    border-radius: 8px;
-}
-
-[data-testid="stSidebar"] button:hover {
-    background-color: #2563eb !important;
-}
-
-[data-testid="stSidebar"] button:hover * {
-    color: #ffffff !important;
-}
-
-    /* Fundo principal */
-    [data-testid="stAppViewContainer"] {
-        background: #f3f6fb;
-    }
-
-    [data-testid="stMainBlockContainer"] {
-        max-width: 100%;
-        padding: 1rem 1.5rem 3rem;
-    }
-
-    /* Menu administrativo */
-    .st-key-admin_menu {
-        background: #143864;
-        padding: 10px 16px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-    }
-
-    .st-key-admin_menu button {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        color: #ffffff !important;
-    }
-
-    .st-key-admin_menu button p,
-    .st-key-admin_menu button span,
-    .st-key-admin_menu button div {
-        color: #ffffff !important;
-    }
-
-    .st-key-admin_menu button:hover {
-        background: rgba(255, 255, 255, 0.15) !important;
-    }
-
-    .st-key-admin_menu button:focus {
-        background: rgba(255, 255, 255, 0.18) !important;
-        color: #ffffff !important;
-    }
-
-    .st-key-admin_menu button:hover p,
-    .st-key-admin_menu button:focus p {
-        color: #ffffff !important;
-    }
-
-    /* Cabeçalho */
-    .admin-topo {
-        background: #143864;
-        color: #ffffff !important;
-        padding: 16px 22px;
-        border-radius: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 22px;
-    }
-
-    .admin-topo,
-    .admin-topo * {
-        color: #ffffff !important;
-    }
-
-    .admin-marca {
-        font-size: 13px;
-        font-weight: 700;
-    }
-
-    .admin-marca small {
-        display: block;
-        font-size: 9px;
-        color: #b8cbe4 !important;
-    }
-
-    .admin-perfil {
-        font-size: 12px;
-        text-align: right;
-    }
-
-    .admin-perfil small {
-        display: block;
-        color: #cbdcf0 !important;
-        margin-top: 3px;
-    }
-
-    /* Painel de boas-vindas */
-    .admin-hero {
-        background: linear-gradient(115deg, #153963, #2867ad);
-        color: #ffffff !important;
-        border-radius: 12px;
-        padding: 36px 30px;
-        min-height: 230px;
-        box-shadow: 0 6px 15px #17395c20;
-    }
-
-    .admin-hero,
-    .admin-hero * {
-        color: #ffffff !important;
-    }
-
-    .admin-hero small {
-        color: #c3d8ef !important;
-        font-size: 11px;
-        letter-spacing: 1px;
-    }
-
-    .admin-hero h2 {
-        color: #ffffff !important;
-        font-size: 28px;
-        margin: 14px 0;
-        font-weight: 700;
-    }
-
-    .admin-hero p {
-        color: #e2ecf8 !important;
-        font-size: 14px;
-        line-height: 1.6;
-    }
-
-/* Posiciona o botão Vamos começar sobre o banner */
-div.st-key-admin_comecar {
-    position: relative !important;
-    transform: translateY(-35px);
-    margin-left: 20px;
-    margin-bottom: -15px;
-    z-index: 2;
-}
-}
-}
-
-div.st-key-admin_comecar button[kind="primary"] {
-    background: #ffffff !important;
-    background-color: #ffffff !important;
-    color: #153963 !important;
-    border: 1px solid #ffffff !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-}
-
-div.st-key-admin_comecar button[kind="primary"]:hover {
-    background: #dbeafe !important;
-    color: #153963 !important;
-}
-}
-
-.st-key-admin_comecar button:hover {
-    background-color: #dbeafe !important;
-    color: #153963 !important;
-}
-    /* Títulos das seções */
-    .admin-titulo {
-        font-size: 16px;
-        font-weight: 700;
-        color: #183b63 !important;
-        margin-top: 22px;
-    }
-
-    .admin-subtitulo {
-        font-size: 12px;
-        color: #718096 !important;
-        margin-bottom: 12px;
-    }
-
-    /* Cards */
-    .admin-card {
-        background: #ffffff;
-        border: 1px solid #e3e9f2;
-        border-radius: 12px;
-        padding: 24px;
-        min-height: 145px;
-        box-shadow: 0 3px 10px #1b355010;
-    }
-
-    .admin-card h4 {
-        color: #173c67 !important;
-        font-size: 14px;
-        margin: 12px 0 5px;
-        font-weight: 700;
-    }
-
-    .admin-card p {
-        color: #718096 !important;
-        font-size: 12px;
-        line-height: 1.5;
-    }
-
-    .admin-icone {
-        display: inline-block;
-        background: #dbeafe;
-        border-radius: 8px;
-        padding: 10px;
-        font-size: 19px;
-    }
-   
-   
-    /* Indicadores da Visão geral */
-div[data-testid="stMetric"] {
-    background-color: #ffffff;
-    border-radius: 12px;
-    padding: 8px;
-}
-
-div[data-testid="stMetricLabel"] p {
-    color: #64748b !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
-}
-
-div[data-testid="stMetricValue"] {
-    color: #173c67 !important;
-    font-weight: 700 !important;
-}
-
-/* Botões do menu superior */
-.admin-nav button,
-.admin-nav button *,
-.admin-menu button,
-.admin-menu button * {
-    color: #153963 !important;
-}
-/* Corrige os botões do menu superior */
-div.st-key-menu_inicio button,
-div.st-key-menu_usuarios button,
-div.st-key-menu_configuracoes button {
-    background-color: #ffffff !important;
-    color: #153963 !important;
-    border: 1px solid #dbe5f2 !important;
-}
-
-div.st-key-menu_inicio button *,
-div.st-key-menu_usuarios button *,
-div.st-key-menu_configuracoes button * {
-    color: #153963 !important;
-}
-    </style>
-    """, unsafe_allow_html=True)
-
-
-# ==========================================
-# PAINEL ADMINISTRATIVO
-# ==========================================
-
-def mostrar_admin():
-    estilos_admin()
-
-    # Usuário autenticado
-    usuario = usuario_logado()
-
-    nome = escape(
-        str(usuario.get("nome", "Administrador"))
-        if usuario else "Administrador"
-    )
-
-    # Cabeçalho
-        # Cabeçalho
-    st.markdown(
-        '<div class="admin-topo">'
-        '<div class="admin-marca">'
-        '▣ SISTEMA DE GESTÃO'
-        '<small>REDE EDUCACIONAL</small>'
-        '</div>'
-        f'<div class="admin-perfil">{nome}'
-        '<small>Administrador</small>'
-        '</div>'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-    # Menu superior
-    menu_administrativo()
-
-    pagina_atual = st.session_state.get(
-        "admin_pagina", "Início"
-    )
-   
-    # =============st.mar=========================
-    # PÁGINA USUÁRIOS - FIREBASE
-    # ======================================
-
-    if pagina_atual == "Usuários":
-        if usuario is None:
-            st.error(
-                "Sessão não encontrada. Faça login novamente."
-            )
-            return
-
-        renderizar_admin_usuarios(usuario)
-        return
-
-    # ======================================
-    # PÁGINA CONFIGURAÇÕES
-    # ======================================
-
-    if pagina_atual == "Configurações":
-        st.title("⚙️ Configurações")
-        st.info(
-            "As configurações administrativas serão implementadas aqui."
-        )
-        return
-
-    # ======================================
-    # PÁGINA INÍCIO
-    # ======================================
-
-    st.markdown(
-        '<div class="admin-hero">'
-        '<small>PAINEL ADMINISTRATIVO</small>'
-        '<h2>Bem-vindo ao Sistema de Agendamento</h2>'
-        '<p>Olá! Estamos prontos para ajudar você a começar.</p>'
-        '<p>Acesse as principais funções do sistema pelo menu acima.</p>'
-        '</div>',
-        unsafe_allow_html=True
-    )
-        # Botão começar
-    if st.button(
-    "Vamos começar",
-    key="admin_comecar",
-    type="secondary"
-):
-        st.session_state.admin_pagina = "Usuários"
-        st.session_state.admin_secao = "usuarios"
+    def navegar(pagina, secao=None):
+        st.session_state.admin_pagina = pagina
+        if secao:
+            st.session_state.admin_secao = secao
+        else:
+            st.session_state.pop("admin_secao", None)
         st.rerun()
 
-    # ======================================
-    # INDICADORES DO DASHBOARD
-    # ======================================
-
-    from utils.estado import carregar_salas, listar_usuarios_admin
-
-    total_salas = len(carregar_salas())
-    total_usuarios = len(listar_usuarios_admin())
-
-    reservas = st.session_state.get("reservas", [])
-
-    total_reservas = len(reservas)
-
-    # Ainda precisamos confirmar como o status
-    # das reservas é representado no projeto.
-    reservas_pendentes = sum(
-    1 for reserva in reservas
-    if reserva.get("status") == "Pendente"
-)
-
-    st.markdown("### 📊 Visão geral")
-    col1, col2, col3, col4 = st.columns(4, gap="medium")
-
-    with col1:
-        with st.container(border=True):
-            st.metric("🏢 Total de salas", total_salas)
-
-    with col2:
-        with st.container(border=True):
-            st.metric("📅 Reservas na sessão", total_reservas)
-
-    with col3:
-        with st.container(border=True):
-            st.metric("👥 Usuários cadastrados", total_usuarios)
-
-    with col4:
-        with st.container(border=True):
-            st.metric("⏳ Reservas pendentes", reservas_pendentes)
-        
-    # ======================================
-    # AÇÕES RÁPIDAS
-    # ======================================
-
     st.markdown("""
-    <div class="admin-titulo">
-        Ações rápidas
-    </div>
+<style>
+[data-testid="stAppViewContainer"] {background:#f6f8fc;}
+[data-testid="stMainBlockContainer"] {max-width:100% !important;padding:0 1.5rem 2rem !important;}
+[data-testid="stHeader"], #MainMenu, footer {display:none !important;}
+section[data-testid="stSidebar"] {background:#0b1120 !important;width:190px !important;min-width:190px !important;}
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {padding:0.8rem 0.55rem !important;}
+section[data-testid="stSidebar"] button[kind="secondary"] {background:transparent !important;color:#e2e9f6 !important;border:0 !important;text-align:left !important;justify-content:flex-start !important;font-size:12px !important;min-height:35px !important;}
+section[data-testid="stSidebar"] button[kind="primary"] {background:#2563eb !important;color:white !important;border:0 !important;justify-content:flex-start !important;font-size:12px !important;min-height:35px !important;}
+section[data-testid="stSidebar"] button:hover {background:#1e3355 !important;color:white !important;}
+.sidebar-brand {color:#fff;font-size:13px;font-weight:750;padding:8px 4px 15px;border-bottom:1px solid #263146;margin-bottom:12px;}
+.sidebar-brand small {display:block;font-size:9px;font-weight:400;letter-spacing:.5px;color:#7893bb;margin-top:4px;}
+.sidebar-label {font-size:10px;color:#a5b8d6;letter-spacing:1px;margin:17px 4px 5px;}
+.page-header {background:#fff;border-bottom:1px solid #e1e8f3;padding:15px 24px;margin:0 -1.5rem 0;color:#101c36;font-size:15px;font-weight:750;}
+.page-header small {display:block;color:#7890ad;font-size:10px;font-weight:400;margin-top:4px;}
+.admin-wrap {max-width:980px;margin:0 auto;padding:0 8px;}
+.admin-hero {position:relative;overflow:hidden;background:#203d72;border-radius:0 0 13px 13px;color:#fff !important;padding:34px 28px 75px;min-height:215px;}
+.admin-hero:before {content:"";position:absolute;border:25px solid #ffffff0a;width:160px;height:160px;border-radius:50%;right:-30px;top:-75px;}
+.admin-hero:after {content:"";position:absolute;border:22px solid #ffffff0a;width:100px;height:100px;border-radius:50%;right:65px;bottom:-70px;}
+.admin-hero .eyebrow {font-size:11px;letter-spacing:1.3px;font-weight:700;color:#bdd7ff !important;}
+div.admin-hero h2,
+div.admin-hero h2 *,
+div.admin-hero h2 span {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    margin: 15px 0 9px !important;
+}
+.admin-hero p {font-size:14px !important;color:#e5efff !important;margin:0;line-height:1.6;}
+/* Botão sobre o rodapé do mesmo banner, sem segunda faixa azul */
+.st-key-hero_button {background:transparent !important;padding:0 !important;margin-top:-60px !important;margin-left:28px !important;margin-bottom:36px !important;position:relative !important;z-index:2;}
+.st-key-hero_button button {background:#fff !important;color:#16335f !important;border:0 !important;border-radius:8px !important;font-size:12px !important;font-weight:700 !important;padding:9px 18px !important;}
+.st-key-hero_button button:hover {background:#e8f0ff !important;color:#16335f !important;}
+.metric-card {background:white;border:1px solid #dce5f1;border-radius:11px;padding:13px;min-height:103px;}
+.metric-icon {font-size:17px;color:#3275f6;display:block;margin-bottom:6px;}
+.metric-card strong {display:block;color:#111c36;font-size:22px;line-height:1.1;}
+.metric-card em {font-size:11px;color:#8ca0bd;font-style:normal;font-weight:400;}
+.metric-card small {display:block;color:#7890af;font-size:10px;margin-top:4px;}
+.section-title {font-size:14px;color:#10264a;font-weight:750;margin-top:18px;}
+.section-hint {font-size:10px;color:#7890af;margin-bottom:10px;}
+.action-card {background:white;border:1px solid #dce5f1;border-radius:11px;padding:12px;min-height:98px;}
+.action-card .icon {display:inline-block;border-radius:8px;padding:5px 8px;background:#eff4fb;color:#3776f5;font-size:15px;}
+.action-card h4 {font-size:11px;color:#132d54;margin:7px 0 3px;}
+.action-card p {font-size:10px;color:#7589a7;line-height:1.45;margin:0;}
+.st-key-actions button {font-size:10px !important;min-height:28px !important;margin-top:-3px !important;}
+.mini-panel {background:white;border:1px solid #dce5f1;border-radius:11px;padding:13px;margin-bottom:12px;}
+.mini-panel h4 {font-size:12px;color:#12294b;margin:0 0 9px;}
+.mini-panel p {font-size:10px;color:#7187a6;margin:0;line-height:1.5;}
+.reserve-line {font-size:10px;color:#19365c;padding:7px 0;border-bottom:1px solid #eef2f8;}
+.reserve-line small {display:block;color:#8295af;font-size:9px;}
+.bar-label {font-size:10px;color:#19345c;display:flex;justify-content:space-between;margin:8px 0 3px;}
+.bar-track {height:4px;border-radius:4px;background:#e8edf6;overflow:hidden;}
+.bar-track span {height:100%;display:block;background:#2864f0;}
+@media(max-width:900px) {.admin-wrap{padding:0}.admin-hero{padding:24px 18px 75px}.st-key-hero_button{margin-left:18px !important;}}
+</style>
+""", unsafe_allow_html=True)
 
-    <div class="admin-subtitulo">
-        Escolha uma atividade para continuar
-        no ambiente administrativo.
-    </div>
-    """, unsafe_allow_html=True)
+    with st.sidebar:
+        st.markdown('<div class="sidebar-brand">▦ &nbsp; Reserva de Salas<small>SISTEMA ACADÊMICO</small></div>', unsafe_allow_html=True)
+        itens = [("⌂", "Início"), ("▦", "Salas"), ("⌖", "Mapa"), ("▣", "Reservas"), ("◷", "Agenda"), ("⚙", "Administração")]
+        for icone, pagina in itens:
+            if st.button(f"{icone}  {pagina}", key=f"side_{pagina}", use_container_width=True,
+                         type="primary" if st.session_state.admin_pagina == pagina else "secondary"):
+                navegar(pagina)
+        st.markdown('<div class="sidebar-label">AJUDA</div>', unsafe_allow_html=True)
+        if st.button("ⓘ  Suporte", key="side_suporte", use_container_width=True):
+            navegar("Suporte")
+        if st.button("♧  Notificações", key="side_notificacoes", use_container_width=True):
+            navegar("Notificações")
 
-    col1, col2, col3 = st.columns(
-        [1, 1, 0.7],
-        gap="medium"
-    )
+    pagina = st.session_state.admin_pagina
+    st.markdown(f'<div class="page-header">{escape(pagina)}<small>Sistema de Reserva de Salas · Campus Central</small></div>', unsafe_allow_html=True)
 
-    # Card 1 - Permissões
-    with col1:
-        st.markdown("""
-        <div class="admin-card">
-            <span class="admin-icone">🛡️</span>
-            <h4>Gerenciar permissões</h4>
-            <p>
-                Defina perfis e níveis de acesso dos usuários.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        if st.button(
-            "Gerenciar permissões",
-            key="admin_permissoes"
-        ):
-            st.session_state.admin_pagina = "Usuários"
-            st.session_state.admin_secao = "permissoes"
-            st.rerun()
-
-    # Card 2 - Consultar usuários
-    with col2:
-        st.markdown("""
-        <div class="admin-card">
-            <span class="admin-icone">👥</span>
-            <h4>Consultar usuários</h4>
-            <p>
-                Localize os acessos já cadastrados no sistema.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        if st.button(
-            "Consultar usuários",
-            key="admin_consultar"
-        ):
-            st.session_state.admin_pagina = "Usuários"
-            st.session_state.admin_secao = "usuarios"
-            st.rerun()
-
-    # Card 3 - Cadastrar usuário
-    with col3:
-        st.markdown("""
-        <div class="admin-card">
-            <h4>Status inicial 🟢</h4>
-            <p>
-                O ambiente está pronto para receber
-                novos registros.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        if st.button(
-            "Cadastrar usuário",
-            key="admin_cadastrar"
-        ):
-            st.session_state.admin_pagina = "Usuários"
-            st.session_state.admin_secao = "cadastro"
-            st.rerun()
-
-
-
-
-     # ======================================
-    # RESERVAS RECENTES E SALAS MAIS RESERVADAS
-    # ======================================
-
-    from datetime import datetime
-    from collections import Counter
-
-    reservas = st.session_state.get("reservas", [])
-    salas = st.session_state.get("salas", [])
-
-    # Organizar reservas por data
-    reservas_recentes = sorted(
-        reservas,
-        key=lambda reserva: datetime.strptime(
-            reserva["data"], "%d/%m/%Y"
-        ),
-        reverse=True
-    )[:5]
-
-    # Contar reservas de cada sala
-    contagem = Counter(
-        reserva["sala_id"]
-        for reserva in reservas
-        if reserva.get("sala_id") is not None
-    )
-
-    nomes_salas = {
-        sala["id"]: sala["nome"]
-        for sala in salas
-    }
-
-    dados_salas = [
-        {
-            "Sala": nomes_salas.get(sala_id, f"Sala {sala_id}"),
-            "Total de reservas": quantidade
-        }
-        for sala_id, quantidade in contagem.most_common(5)
-    ]
-
-    # Criar duas colunas
-    coluna_reservas, coluna_salas = st.columns(
-        [1.7, 1],
-        gap="medium"
-    )
-
-    # Coluna esquerda — Reservas recentes
-    with coluna_reservas:
-        st.markdown("### 📅 Reservas recentes")
-
-        if reservas_recentes:
-            dados_tabela = []
-
-            for reserva in reservas_recentes:
-                dados_tabela.append({
-                    "Sala": nomes_salas.get(
-                        reserva["sala_id"],
-                        f"Sala {reserva['sala_id']}"
-                    ),
-                    "Cliente": reserva["cliente"],
-                    "Data": reserva["data"],
-                    "Horário": reserva["horario"],
-                    "Status": reserva["status"]
-                })
-
-            st.dataframe(
-                dados_tabela,
-                use_container_width=True,
-                hide_index=True
-            )
+    if pagina != "Início":
+        st.title(pagina)
+        secao = st.session_state.get("admin_secao")
+        if secao:
+            st.info(f"Seção selecionada: {secao}. Esta funcionalidade será conectada ao projeto.")
         else:
-            st.info("Nenhuma reserva encontrada.")
+            st.info("A navegação está pronta. O conteúdo será conectado às funcionalidades existentes.")
+        if st.button("← Voltar ao Início", key="admin_voltar"):
+            navegar("Início")
+        return
 
-    # Coluna direita — Salas mais reservadas
-    with coluna_salas:
-        st.markdown("### 🏢 Salas mais reservadas")
+    # HTML em uma string única: evita mostrar as tags como texto na tela.
+    st.markdown(
+        '<div class="admin-wrap"><div class="admin-hero">'
+        '<div class="eyebrow">PAINEL ADMINISTRATIVO</div>'
+        '<h2>Bem-vindo ao Sistema de Reservas</h2>'
+        '<p>Olá! Estamos prontos para ajudar você a começar.<br>'
+        'Acesse as principais funções do sistema pelo menu ao lado.</p>'
+        '</div></div>',
+        unsafe_allow_html=True,
+    )
 
-        if dados_salas:
-            st.dataframe(
-                dados_salas,
-                use_container_width=True,
-                hide_index=True
-            )
-        else:
-            st.info("Ainda não existem reservas para exibir.")
-        
-        
+    _, conteudo, _ = st.columns([1, 8, 1], gap="small")
+    with conteudo:
+        with st.container(key="hero_button"):
+            if st.button("Vamos começar", key="admin_comecar"):
+                navegar("Administração", "usuarios")
+
+        metricas = st.columns(4, gap="small")
+        dados = [("▦", "7", "/10", "Salas disponíveis"),
+                 ("▣", "3", "", "Reservas hoje"),
+                 ("◷", "2", "", "Pendentes de conf."),
+                 ("♙", "42", "", "Usuários ativos")]
+        for coluna, (icone, valor, sufixo, legenda) in zip(metricas, dados):
+            with coluna:
+                st.markdown(
+                    f'<div class="metric-card"><span class="metric-icon">{icone}</span>'
+                    f'<strong>{valor}<em>{sufixo}</em></strong><small>{legenda}</small></div>',
+                    unsafe_allow_html=True,
+                )
+
+        st.markdown('<div class="section-title">Ações rápidas</div><div class="section-hint">Escolha uma atividade para continuar no ambiente administrativo.</div>', unsafe_allow_html=True)
+        esquerda, direita = st.columns([2.1, 1], gap="medium")
+        with esquerda:
+            acoes = [
+                 ("♢", "Gerenciar permissões", "Defina perfis e níveis de acesso do usuário.", "Administração", "permissoes"),
+                ("♙", "Consultar usuários", "Localize os acessos já cadastrados no sistema.", "Administração", "usuarios"),
+                ("▣", "Nova reserva", "Reserve uma sala rapidamente para hoje ou amanhã.", "Reservas", "nova_reserva"),
+                ("⌖", "Ver mapa do campus", "Visualize a disponibilidade de salas por bloco.", "Mapa", "mapa"),
+                ("◷", "Agenda do dia", "Veja as reservas confirmadas para hoje no campus.", "Agenda", "agenda"),
+                ("⚙", "Configurações", "Ajuste parâmetros gerais do sistema institucional.", "Administração", "configuracoes"),
+            ]
+            with st.container(key="actions"):
+                for i in range(0, len(acoes), 2):
+                    cols = st.columns(2, gap="small")
+                    for col, (icone, titulo, descricao, destino, secao) in zip(cols, acoes[i:i + 2]):
+                        with col:
+                            st.markdown(
+                                f'<div class="action-card"><span class="icon">{icone}</span>'
+                                f'<h4>{escape(titulo)}</h4><p>{escape(descricao)}</p></div>',
+                                unsafe_allow_html=True,
+                            )
+                            if st.button(titulo, key=f"acao_{secao}", use_container_width=True):
+                                navegar(destino, secao)
+        with direita:
+            st.markdown('<div class="mini-panel"><h4>Status do sistema 🟢</h4><p>O ambiente está pronto para receber novos registros e atribuições de acesso.</p><p style="margin-top:8px;color:#2864f0">✓ Cadastro pronto para começar</p></div>', unsafe_allow_html=True)
+            st.markdown('<div class="mini-panel"><h4>Reservas recentes</h4><div class="reserve-line">🔵 Sala A-101<small>08:00–10:00 · Prof. Dr. Ricardo</small></div><div class="reserve-line">🔵 Auditório Central<small>09:00–12:00 · Profa. Dra. Camila</small></div><div class="reserve-line">🔵 Lab. Eletrônica<small>14:00–17:00 · Prof. Me. Leandro</small></div><div class="reserve-line">🟠 Sala B-204<small>07:00–09:00 · Profa. Dra. Ana</small></div></div>', unsafe_allow_html=True)
+            barras = [("Sala B-204", 18, 100), ("Lab. Informática 1", 14, 78), ("Auditório Norte", 11, 61), ("Sala C-310", 9, 50)]
+            html = '<div class="mini-panel"><h4>Salas mais reservadas</h4>'
+            for nome_sala, qtd, largura in barras:
+                html += (f'<div class="bar-label"><span>{escape(nome_sala)}</span><span>{qtd}x</span></div>'
+                         f'<div class="bar-track"><span style="width:{largura}%"></span></div>')
+            st.markdown(html + '</div>', unsafe_allow_html=True)

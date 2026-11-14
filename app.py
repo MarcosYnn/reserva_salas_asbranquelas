@@ -1,7 +1,8 @@
 ﻿import streamlit as st
 
 try:
-    from dotenv import load_dotenv
+    from importlib import import_module
+    load_dotenv = import_module("dotenv").load_dotenv
     load_dotenv()
 except ImportError:
     pass  # python-dotenv não instalado: use variáveis de ambiente do sistema
@@ -109,31 +110,19 @@ if usuario is None:
 
 
 # ==========================================
-# SIDEBAR (só é montada com usuário autenticado)
+# NAVEGAÇÃO
 # ==========================================
 
-with st.sidebar:
-    st.markdown("Reserva de Salas")
-    st.divider()
+paginas = main.menu_para(usuario["tipo"])
 
-    st.markdown(f"### {usuario['nome']}")
-    st.caption(f"Conta de {usuario['tipo']}")
+# Administrador inicia no painel administrativo
+if "pagina_atual" not in st.session_state:
+    if usuario["tipo"] == main.TIPO_ADMIN:
+        st.session_state.pagina_atual = " Administração"
+    else:
+        st.session_state.pagina_atual = paginas[0]
 
-    st.divider()
-    st.markdown("### Menu")
-
-    pagina = st.radio(
-        "Navegação",
-        main.menu_para(usuario["tipo"]),
-        label_visibility="collapsed",
-    )
-
-    st.divider()
-
-    if st.button("Sair"):
-        fazer_logout()
-        st.rerun()
-
+pagina = st.session_state.pagina_atual
 
 # ==========================================
 # CONTEÚDO PRINCIPAL

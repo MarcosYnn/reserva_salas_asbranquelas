@@ -5,6 +5,67 @@ from utils.estado import sala_por_id
 def injetar_css():
     st.markdown("""
     <style>
+    /* PADRONIZAÇÃO DAS FONTES DO DASHBOARD */
+/* Fonte geral */
+[data-testid="stMain"] {
+    font-family: Arial, sans-serif !important;
+}
+
+/* Títulos */
+[data-testid="stMain"] h1,
+[data-testid="stMain"] h2,
+[data-testid="stMain"] h3 {
+    font-weight: 700 !important;
+    letter-spacing: -0.3px;
+}
+
+/* Textos dos botões */
+[data-testid="stMain"] button,
+[data-testid="stMain"] button p,
+[data-testid="stMain"] button span {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #153963 !important;
+}
+
+/* Textos dos indicadores */
+[data-testid="stMetricLabel"] p {
+    font-size: 14px !important;
+    color: #64748b !important;
+}
+
+[data-testid="stMetricValue"] {
+    font-size: 30px !important;
+    color: #173c67 !important;
+}
+
+/* Textos dos campos */
+[data-testid="stMain"] label {
+    font-size: 14px !important;
+}
+/* Letras dos botões do menu superior */
+div.st-key-menu_inicio button p,
+div.st-key-menu_usuarios button p,
+div.st-key-menu_configuracoes button p {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: #153963 !important;
+}
+
+/* Letras dos indicadores */
+[data-testid="stMetricLabel"] p {
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    color: #526780 !important;
+}
+
+[data-testid="stMetricValue"] {
+    font-size: 32px !important;
+    font-weight: 700 !important;
+    color: #173c67 !important;
+}
+
+    <style>
         /* O app usa uma identidade visual clara independentemente do tema
            escolhido no Streamlit. Assim, o modo escuro não deixa textos
            brancos sobre cards claros. */
