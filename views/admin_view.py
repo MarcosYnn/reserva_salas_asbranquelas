@@ -1,5 +1,11 @@
 
 import streamlit as st
+st.set_page_config(
+    page_title="Escritório Virtual",
+    page_icon="🏢",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 from html import escape
 from textwrap import dedent
 
@@ -199,6 +205,36 @@ def estilos_admin():
         line-height: 1.6;
     }
 
+/* Posiciona o botão Vamos começar sobre o banner */
+div.st-key-admin_comecar {
+    position: relative !important;
+    transform: translateY(-35px);
+    margin-left: 20px;
+    margin-bottom: -15px;
+    z-index: 2;
+}
+}
+}
+
+div.st-key-admin_comecar button[kind="primary"] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #153963 !important;
+    border: 1px solid #ffffff !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+
+div.st-key-admin_comecar button[kind="primary"]:hover {
+    background: #dbeafe !important;
+    color: #153963 !important;
+}
+}
+
+.st-key-admin_comecar button:hover {
+    background-color: #dbeafe !important;
+    color: #153963 !important;
+}
     /* Títulos das seções */
     .admin-titulo {
         font-size: 16px;
@@ -245,7 +281,6 @@ def estilos_admin():
     }
    
    
-   
     /* Indicadores da Visão geral */
 div[data-testid="stMetric"] {
     background-color: #ffffff;
@@ -264,8 +299,27 @@ div[data-testid="stMetricValue"] {
     font-weight: 700 !important;
 }
 
+/* Botões do menu superior */
+.admin-nav button,
+.admin-nav button *,
+.admin-menu button,
+.admin-menu button * {
+    color: #153963 !important;
+}
+/* Corrige os botões do menu superior */
+div.st-key-menu_inicio button,
+div.st-key-menu_usuarios button,
+div.st-key-menu_configuracoes button {
+    background-color: #ffffff !important;
+    color: #153963 !important;
+    border: 1px solid #dbe5f2 !important;
+}
 
-
+div.st-key-menu_inicio button *,
+div.st-key-menu_usuarios button *,
+div.st-key-menu_configuracoes button * {
+    color: #153963 !important;
+}
     </style>
     """, unsafe_allow_html=True)
 
@@ -345,11 +399,12 @@ def mostrar_admin():
         '</div>',
         unsafe_allow_html=True
     )
-    # Botão começar
+        # Botão começar
     if st.button(
-        "Vamos começar",
-        key="admin_comecar"
-    ):
+    "Vamos começar",
+    key="admin_comecar",
+    type="secondary"
+):
         st.session_state.admin_pagina = "Usuários"
         st.session_state.admin_secao = "usuarios"
         st.rerun()

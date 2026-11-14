@@ -94,6 +94,35 @@ def injetar_css():
         }
         .sala-titulo { font-size: 18px; font-weight: 700; color: #15182f !important; }
         .sala-info { color: #4b5563 !important; font-size: 14px; margin-top: 6px; }
+        /* CORREÇÃO GERAL DO DASHBOARD */
+
+/* Botões */
+[data-testid="stMain"] .stButton button {
+    background-color: #ffffff !important;
+    color: #153963 !important;
+    border: 1px solid #dbe5f2 !important;
+}
+
+[data-testid="stMain"] .stButton button:hover {
+    background-color: #dbeafe !important;
+    color: #153963 !important;
+}
+
+/* Tabelas */
+[data-testid="stMain"] [data-testid="stDataFrame"] {
+    color-scheme: light !important;
+}
+
+/* Indicadores */
+[data-testid="stMain"] [data-testid="stMetric"] {
+    color-scheme: light !important;
+}
+
+/* Botão Vamos começar */
+[data-testid="stMain"] .st-key-admin_comecar button {
+    background-color: #ffffff !important;
+    color: #153963 !important;
+}
     </style>
     """, unsafe_allow_html=True)
 
