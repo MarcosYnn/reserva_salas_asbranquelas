@@ -11,7 +11,7 @@ def injetar_css():
         .stApp,
         [data-testid="stAppViewContainer"],
         [data-testid="stMain"] {
-            background-color: #f7f8fc !important;
+           background-color: #f3f6fb !important;
             color: #15182f !important;
         }
 
@@ -57,7 +57,7 @@ def injetar_css():
         }
 
         section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #171a4a 0%, #272c70 100%);
+            background: #0b1020 !important;
         }
         section[data-testid="stSidebar"] * {
             color: white;

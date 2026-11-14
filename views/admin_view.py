@@ -59,6 +59,27 @@ def menu_administrativo():
 def estilos_admin():
     st.markdown("""
     <style>
+    /* Menu lateral do protótipo */
+[data-testid="stSidebar"] {
+    background-color: #0b1020 !important;
+    border-right: none !important;
+}
+
+[data-testid="stSidebar"] * {
+    color: #c6d2e8;
+}
+
+[data-testid="stSidebar"] button {
+    border-radius: 8px;
+}
+
+[data-testid="stSidebar"] button:hover {
+    background-color: #2563eb !important;
+}
+
+[data-testid="stSidebar"] button:hover * {
+    color: #ffffff !important;
+}
 
     /* Fundo principal */
     [data-testid="stAppViewContainer"] {
@@ -217,11 +238,33 @@ def estilos_admin():
 
     .admin-icone {
         display: inline-block;
-        background: #edf4ff;
+        background: #dbeafe;
         border-radius: 8px;
         padding: 10px;
         font-size: 19px;
     }
+   
+   
+   
+    /* Indicadores da Visão geral */
+div[data-testid="stMetric"] {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 8px;
+}
+
+div[data-testid="stMetricLabel"] p {
+    color: #64748b !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+div[data-testid="stMetricValue"] {
+    color: #173c67 !important;
+    font-weight: 700 !important;
+}
+
+
 
     </style>
     """, unsafe_allow_html=True)
@@ -263,7 +306,7 @@ def mostrar_admin():
     pagina_atual = st.session_state.get(
         "admin_pagina", "Início"
     )
-
+   
     # =============st.mar=========================
     # PÁGINA USUÁRIOS - FIREBASE
     # ======================================
@@ -311,6 +354,45 @@ def mostrar_admin():
         st.session_state.admin_secao = "usuarios"
         st.rerun()
 
+    # ======================================
+    # INDICADORES DO DASHBOARD
+    # ======================================
+
+    from utils.estado import carregar_salas, listar_usuarios_admin
+
+    total_salas = len(carregar_salas())
+    total_usuarios = len(listar_usuarios_admin())
+
+    reservas = st.session_state.get("reservas", [])
+
+    total_reservas = len(reservas)
+
+    # Ainda precisamos confirmar como o status
+    # das reservas é representado no projeto.
+    reservas_pendentes = sum(
+    1 for reserva in reservas
+    if reserva.get("status") == "Pendente"
+)
+
+    st.markdown("### 📊 Visão geral")
+    col1, col2, col3, col4 = st.columns(4, gap="medium")
+
+    with col1:
+        with st.container(border=True):
+            st.metric("🏢 Total de salas", total_salas)
+
+    with col2:
+        with st.container(border=True):
+            st.metric("📅 Reservas na sessão", total_reservas)
+
+    with col3:
+        with st.container(border=True):
+            st.metric("👥 Usuários cadastrados", total_usuarios)
+
+    with col4:
+        with st.container(border=True):
+            st.metric("⏳ Reservas pendentes", reservas_pendentes)
+        
     # ======================================
     # AÇÕES RÁPIDAS
     # ======================================
@@ -390,3 +472,93 @@ def mostrar_admin():
             st.session_state.admin_pagina = "Usuários"
             st.session_state.admin_secao = "cadastro"
             st.rerun()
+
+
+
+
+     # ======================================
+    # RESERVAS RECENTES E SALAS MAIS RESERVADAS
+    # ======================================
+
+    from datetime import datetime
+    from collections import Counter
+
+    reservas = st.session_state.get("reservas", [])
+    salas = st.session_state.get("salas", [])
+
+    # Organizar reservas por data
+    reservas_recentes = sorted(
+        reservas,
+        key=lambda reserva: datetime.strptime(
+            reserva["data"], "%d/%m/%Y"
+        ),
+        reverse=True
+    )[:5]
+
+    # Contar reservas de cada sala
+    contagem = Counter(
+        reserva["sala_id"]
+        for reserva in reservas
+        if reserva.get("sala_id") is not None
+    )
+
+    nomes_salas = {
+        sala["id"]: sala["nome"]
+        for sala in salas
+    }
+
+    dados_salas = [
+        {
+            "Sala": nomes_salas.get(sala_id, f"Sala {sala_id}"),
+            "Total de reservas": quantidade
+        }
+        for sala_id, quantidade in contagem.most_common(5)
+    ]
+
+    # Criar duas colunas
+    coluna_reservas, coluna_salas = st.columns(
+        [1.7, 1],
+        gap="medium"
+    )
+
+    # Coluna esquerda — Reservas recentes
+    with coluna_reservas:
+        st.markdown("### 📅 Reservas recentes")
+
+        if reservas_recentes:
+            dados_tabela = []
+
+            for reserva in reservas_recentes:
+                dados_tabela.append({
+                    "Sala": nomes_salas.get(
+                        reserva["sala_id"],
+                        f"Sala {reserva['sala_id']}"
+                    ),
+                    "Cliente": reserva["cliente"],
+                    "Data": reserva["data"],
+                    "Horário": reserva["horario"],
+                    "Status": reserva["status"]
+                })
+
+            st.dataframe(
+                dados_tabela,
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            st.info("Nenhuma reserva encontrada.")
+
+    # Coluna direita — Salas mais reservadas
+    with coluna_salas:
+        st.markdown("### 🏢 Salas mais reservadas")
+
+        if dados_salas:
+            st.dataframe(
+                dados_salas,
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            st.info("Ainda não existem reservas para exibir.")
+        
+        
