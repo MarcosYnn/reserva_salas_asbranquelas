@@ -1,7 +1,7 @@
 ﻿from datetime import date, time
 import streamlit as st
 
-from views.admin_view import renderizar_admin_usuarios
+from views.admin_view import mostrar_admin
 
 from utils.estado import (
     sala_por_id, reservas_de, salas_de, reservas_das_salas, adicionar_sala,
@@ -265,7 +265,7 @@ def pagina_perfil_proprietario(usuario):
 
 def pagina_admin(usuario):
     exigir_tipo(usuario, [TIPO_ADMIN])
-    renderizar_admin_usuarios(usuario)
+    mostrar_admin()
 
 
 PAGINAS_LOCATARIO = {

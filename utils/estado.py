@@ -25,7 +25,7 @@ TIPO_ADMIN = "Administrador"
 # elas sempre têm prioridade sobre estes valores padrão.
 ADMIN_USUARIO_PADRAO = "admin"
 ADMIN_EMAIL_PADRAO = "admin@escritorio.com"
-ADMIN_SENHA_PADRAO = "Admin@123"  # precisa de maiúscula+minúscula+número (regra de senha forte)
+ADMIN_SENHA_PADRAO = None  # precisa de maiúscula+minúscula+número (regra de senha forte)
 
 # O database.py não tem coluna "proprietario" na tabela salas, então
 # não dá pra persistir o dono de cada sala no banco sem alterá-lo
@@ -211,26 +211,11 @@ def cadastrar_usuario(nome_usuario, email, nome_completo, senha, confirmar_senha
 
 
 def fazer_login(identificador, senha):
-    """identificador pode ser nome de usuário OU e-mail.
-    Retorna (sucesso: bool, mensagem: str)."""
+    from controllers.firebase_auth_controller import (
+        autenticar_usuario_firebase,
+    )
 
-    identificador = (identificador or "").strip()
-    usuario_db = db.buscar_usuario_por_login(identificador)
-
-    # Mensagem genérica em ambos os casos (usuário inexistente ou
-    # senha errada) para não revelar se um usuário existe ou não.
-    if not usuario_db or not auth.verificar_senha(senha or "", usuario_db["senha_hash"], usuario_db["salt"]):
-        return False, "Usuário/e-mail ou senha inválidos."
-
-    if not usuario_db["email_confirmado"]:
-        return False, "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada."
-
-    if not usuario_db["ativo"]:
-        return False, "Sua conta foi desativada. Entre em contato com um administrador."
-
-    st.session_state.usuario = _usuario_db_para_sessao(usuario_db)
-    return True, "Login efetuado com sucesso."
-
+    return autenticar_usuario_firebase(identificador, senha)
 
 def fazer_logout():
     st.session_state.usuario = None
@@ -340,7 +325,7 @@ def garantir_admin_via_env():
     Prioridade:
     1. ADMIN_USERNAME / ADMIN_EMAIL / ADMIN_PASSWORD (variáveis de
        ambiente), se estiverem definidas — use isso em produção.
-    2. Caso contrário, cria a conta padrão (admin / Admin@123), para
+    2. Caso contrário, não cria o administrador sem a variável ADMIN_PASSWORD. 
        o projeto já sair funcionando sem nenhuma configuração extra.
 
     Só roda se ainda não existir nenhum administrador no banco — não
@@ -354,7 +339,10 @@ def garantir_admin_via_env():
 
     nome_usuario = os.environ.get("ADMIN_USERNAME") or ADMIN_USUARIO_PADRAO
     email = os.environ.get("ADMIN_EMAIL") or ADMIN_EMAIL_PADRAO
-    senha = os.environ.get("ADMIN_PASSWORD") or ADMIN_SENHA_PADRAO
+    senha = os.environ.get("ADMIN_PASSWORD")
+
+    if not senha:
+        return
 
     criar_ou_atualizar_admin(nome_usuario, email, senha)
 

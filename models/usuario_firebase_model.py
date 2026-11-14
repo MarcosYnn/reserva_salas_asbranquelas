@@ -5,7 +5,31 @@ from models.firebase_client import obter_app_firebase, obter_firestore
 
 COLECAO_USUARIOS = "usuarios"
 STATUS_VALIDOS = {"ativo", "inativo"}
+def _normalizar_usuario(usuario):
+    return (usuario or "").strip().lower()
 
+
+def _usuario_do_perfil(dados):
+    usuario = dados.get("usuario")
+    if usuario:
+        return _normalizar_usuario(usuario)
+
+    email = (dados.get("email") or "").strip().lower()
+    return email.split("@", 1)[0] if "@" in email else ""
+
+
+def buscar_usuario_por_usuario(usuario):
+    usuario_procurado = _normalizar_usuario(usuario)
+    if not usuario_procurado:
+        return None
+
+    encontrados = [
+        dados
+        for dados in listar_usuarios()
+        if _usuario_do_perfil(dados) == usuario_procurado
+    ]
+
+    return encontrados[0] if len(encontrados) == 1 else None
 
 def _validar_campos(nome, email, perfil, status):
     nome = nome.strip()
