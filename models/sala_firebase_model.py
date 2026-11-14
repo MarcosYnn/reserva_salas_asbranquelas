@@ -93,6 +93,41 @@ def listar_salas():
     )
 
 
+def _dados_editaveis(
+    nome,
+    capacidade,
+    localizacao,
+    recursos_marcados,
+):
+    nome = (nome or "").strip()
+    localizacao = (localizacao or "").strip()
+
+    if not nome:
+        raise ValueError("Informe o nome da sala.")
+
+    try:
+        capacidade = int(capacidade)
+    except (TypeError, ValueError):
+        raise ValueError("A capacidade deve ser um número inteiro.")
+
+    if capacidade < 1:
+        raise ValueError("A capacidade deve ser maior que zero.")
+
+    recursos = set(recursos_marcados or [])
+
+    return {
+        "nome": nome,
+        "capacidade": capacidade,
+        "localizacao": localizacao,
+        "projetor": "projetor" in recursos,
+        "computador": "computador" in recursos,
+        "internet": "internet" in recursos,
+        "webcam": "webcam" in recursos,
+        "quadro": "quadro" in recursos,
+        "ar_condicionado": "ar_condicionado" in recursos,
+    }
+
+
 def criar_sala(
     nome,
     capacidade,
@@ -100,30 +135,21 @@ def criar_sala(
     proprietario,
     recursos_marcados,
 ):
-    nome = (nome or "").strip()
-    localizacao = (localizacao or "").strip()
     proprietario = (proprietario or "").strip()
 
-    if not nome:
-        raise ValueError("Informe o nome da sala.")
-    if int(capacidade) < 1:
-        raise ValueError("A capacidade deve ser maior que zero.")
+    if not proprietario:
+        raise ValueError("Não foi possível identificar o proprietário.")
 
-    recursos = set(recursos_marcados or [])
     sala_id = uuid4().hex
-
     dados = {
         "id": sala_id,
-        "nome": nome,
-        "capacidade": int(capacidade),
-        "localizacao": localizacao,
         "proprietario": proprietario,
-        "projetor": "projetor" in recursos,
-        "computador": "computador" in recursos,
-        "internet": "internet" in recursos,
-        "webcam": "webcam" in recursos,
-        "quadro": "quadro" in recursos,
-        "ar_condicionado": "ar_condicionado" in recursos,
+        **_dados_editaveis(
+            nome=nome,
+            capacidade=capacidade,
+            localizacao=localizacao,
+            recursos_marcados=recursos_marcados,
+        ),
     }
 
     (
@@ -133,6 +159,33 @@ def criar_sala(
         .set(dados)
     )
 
+    return dados
+
+
+def atualizar_sala(
+    sala_id,
+    nome,
+    capacidade,
+    localizacao,
+    recursos_marcados,
+):
+    referencia = (
+        obter_firestore()
+        .collection(COLECAO_SALAS)
+        .document(str(sala_id))
+    )
+
+    if not referencia.get().exists:
+        raise ValueError("Sala não encontrada no Firestore.")
+
+    dados = _dados_editaveis(
+        nome=nome,
+        capacidade=capacidade,
+        localizacao=localizacao,
+        recursos_marcados=recursos_marcados,
+    )
+
+    referencia.update(dados)
     return dados
 
 

@@ -2,6 +2,11 @@ from datetime import date, datetime, time
 
 import streamlit as st
 
+from controllers.sala_controller import (
+    atualizar_sala,
+    excluir_sala,
+)
+
 from controllers.reserva_controller import (
     buscar_conflitos,
     listar_reservas_ativas_para_busca,
@@ -501,6 +506,8 @@ def pagina_minhas_salas(usuario):
     colunas = st.columns(3)
 
     for indice, sala in enumerate(minhas_salas):
+        sala_id = sala["id"]
+
         with colunas[indice % 3]:
             st.markdown(f"""
             <div class="sala">
@@ -512,6 +519,124 @@ def pagina_minhas_salas(usuario):
                 <div class="sala-info">📍 {sala['andar']}</div>
             </div>
             """, unsafe_allow_html=True)
+
+            with st.expander(f"Gerenciar {sala['nome']}"):
+                with st.form(f"form_editar_sala_{sala_id}"):
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        nome = st.text_input(
+                            "Nome da sala",
+                            value=sala.get("nome", ""),
+                            key=f"nome_sala_{sala_id}",
+                        )
+                        capacidade = st.number_input(
+                            "Capacidade",
+                            min_value=1,
+                            value=max(1, int(sala.get("capacidade", 1))),
+                            key=f"capacidade_sala_{sala_id}",
+                        )
+
+                    with col2:
+                        localizacao = st.text_input(
+                            "Localização",
+                            value=sala.get("andar", ""),
+                            key=f"localizacao_sala_{sala_id}",
+                        )
+
+                    st.caption("Recursos disponíveis")
+                    rc1, rc2, rc3 = st.columns(3)
+
+                    with rc1:
+                        projetor = st.checkbox(
+                            "Projetor",
+                            value=bool(sala.get("projetor", False)),
+                            key=f"projetor_sala_{sala_id}",
+                        )
+                        computador = st.checkbox(
+                            "Computador",
+                            value=bool(sala.get("computador", False)),
+                            key=f"computador_sala_{sala_id}",
+                        )
+
+                    with rc2:
+                        internet = st.checkbox(
+                            "Wi-Fi",
+                            value=bool(sala.get("internet", False)),
+                            key=f"internet_sala_{sala_id}",
+                        )
+                        webcam = st.checkbox(
+                            "Webcam",
+                            value=bool(sala.get("webcam", False)),
+                            key=f"webcam_sala_{sala_id}",
+                        )
+
+                    with rc3:
+                        quadro = st.checkbox(
+                            "Quadro branco",
+                            value=bool(sala.get("quadro", False)),
+                            key=f"quadro_sala_{sala_id}",
+                        )
+                        ar_condicionado = st.checkbox(
+                            "Ar-condicionado",
+                            value=bool(sala.get("ar_condicionado", False)),
+                            key=f"ar_sala_{sala_id}",
+                        )
+
+                    salvar = st.form_submit_button(
+                        "Salvar alterações",
+                        type="primary",
+                    )
+
+                if salvar:
+                    recursos_marcados = [
+                        chave
+                        for chave, marcado in {
+                            "projetor": projetor,
+                            "computador": computador,
+                            "internet": internet,
+                            "webcam": webcam,
+                            "quadro": quadro,
+                            "ar_condicionado": ar_condicionado,
+                        }.items()
+                        if marcado
+                    ]
+
+                    try:
+                        atualizar_sala(
+                            usuario=usuario,
+                            sala_id=sala_id,
+                            nome=nome,
+                            capacidade=capacidade,
+                            localizacao=localizacao,
+                            recursos_marcados=recursos_marcados,
+                        )
+                        st.success("Sala atualizada.")
+                        st.rerun()
+                    except Exception as erro:
+                        st.error(f"Não foi possível atualizar a sala: {erro}")
+
+                st.divider()
+
+                confirmar_exclusao = st.checkbox(
+                    "Confirmo que quero excluir esta sala.",
+                    key=f"confirmar_exclusao_sala_{sala_id}",
+                )
+
+                if st.button(
+                    "Excluir sala",
+                    key=f"excluir_sala_{sala_id}",
+                    disabled=not confirmar_exclusao,
+                ):
+                    try:
+                        excluir_sala(
+                            usuario=usuario,
+                            sala_id=sala_id,
+                        )
+                        st.success("Sala excluída.")
+                        st.rerun()
+                    except Exception as erro:
+                        st.error(f"Não foi possível excluir a sala: {erro}")
 
 
 def pagina_pedidos_proprietario(usuario):
