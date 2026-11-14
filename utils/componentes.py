@@ -272,6 +272,14 @@ def render_sala_card(
                         data=data,
                         hora_inicio=hora_inicio,
                         hora_fim=hora_fim,
+                        necessita_equipamentos=st.session_state.get(
+                            "busca_necessita_equipamentos",
+                            False,
+                        ),
+                        evento_institucional=st.session_state.get(
+                            "busca_evento_institucional",
+                            False,
+                        ),
                     )
                     st.success(
                         "Pedido enviado. O status inicial é Pendente."

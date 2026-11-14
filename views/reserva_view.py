@@ -15,6 +15,13 @@ from utils.estado import (
 )
 
 
+ROTULOS_PRIORIDADE = {
+    1: "Normal",
+    2: "Aula prática / precisa de equipamentos",
+    3: "Evento institucional",
+}
+
+
 def _formatar_data(data):
     try:
         return datetime.strptime(data, "%Y-%m-%d").strftime("%d/%m/%Y")
@@ -22,7 +29,7 @@ def _formatar_data(data):
         return data or "Data não informada"
 
 
-def _mostrar_reserva(reserva):
+def _mostrar_reserva(reserva, mostrar_revisao_admin=False):
     st.write(f"**Sala:** {reserva.get('sala_nome', 'Sala sem nome')}")
     st.write(f"**Solicitante:** {reserva.get('solicitante_nome', '—')}")
     st.write(f"**Data:** {_formatar_data(reserva.get('data'))}")
@@ -31,6 +38,56 @@ def _mostrar_reserva(reserva):
         f"às {reserva.get('hora_fim', '—')}"
     )
     st.write(f"**Status:** {reserva.get('status', '—')}")
+
+    if not mostrar_revisao_admin:
+        return
+
+    prioridade = reserva.get("prioridade", 1)
+    rotulo_prioridade = ROTULOS_PRIORIDADE.get(
+        prioridade,
+        "Não definida",
+    )
+    st.write(f"**Prioridade:** {rotulo_prioridade}")
+
+    if not reserva.get("precisa_revisao_admin"):
+        return
+
+    st.warning(
+        "Este pedido coincide com outra reserva pendente ou aprovada. "
+        "Confira os detalhes antes de decidir."
+    )
+
+    conflitos_ids = reserva.get("conflitos_reserva_ids", [])
+    if not conflitos_ids:
+        st.caption(
+            "O pedido foi sinalizado para revisão, mas não há "
+            "identificadores de conflito registrados."
+        )
+        return
+
+    st.markdown("**Reservas que geraram o alerta:**")
+
+    for conflito_id in conflitos_ids:
+        try:
+            conflito = reserva_model.buscar_reserva(conflito_id)
+        except Exception as erro:
+            st.caption(
+                f"Não foi possível consultar o pedido {conflito_id}: {erro}"
+            )
+            continue
+
+        if not conflito:
+            st.caption(f"Pedido relacionado não encontrado: {conflito_id}")
+            continue
+
+        st.write(
+            f"- **{conflito.get('sala_nome', 'Sala')}** — "
+            f"{_formatar_data(conflito.get('data'))}, "
+            f"{conflito.get('hora_inicio', '—')} às "
+            f"{conflito.get('hora_fim', '—')} — "
+            f"{conflito.get('status', 'Status não informado')} "
+            f"(solicitante: {conflito.get('solicitante_nome', '—')})"
+        )
 
 
 def _alterar_status_e_atualizar(usuario, reserva_id, novo_status):
@@ -91,7 +148,10 @@ def renderizar_reservas(usuario):
             f"{reserva.get('sala_nome', 'Sala')} — "
             f"{_formatar_data(reserva.get('data'))} — {status}"
         ):
-            _mostrar_reserva(reserva)
+            _mostrar_reserva(
+                reserva,
+                mostrar_revisao_admin=(perfil == TIPO_ADMIN),
+            )
 
             if perfil == TIPO_ADMIN:
                 if status == reserva_model.PENDENTE:

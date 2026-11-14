@@ -2,6 +2,12 @@ from datetime import date, datetime, time
 
 import streamlit as st
 
+from controllers.reserva_controller import (
+    buscar_conflitos,
+    listar_reservas_ativas_para_busca,
+    listar_reservas_usuario,
+)
+
 from controllers.autorizacao_controller import exigir_tipo
 from controllers.reserva_controller import (
     listar_reservas_ativas_para_busca,
@@ -166,9 +172,22 @@ def pagina_buscar_salas(usuario):
             value=4,
         )
 
+    col5, col6 = st.columns(2)
+
+    with col5:
+        necessita_equipamentos = st.checkbox(
+            "Precisa de equipamentos especiais"
+        )
+
+    with col6:
+        evento_institucional = st.checkbox(
+            "É um evento institucional"
+        )
+
     if st.button("🔎 Procurar salas", type="primary"):
         if horario_fim <= horario_inicio:
             st.session_state.resultado_busca = []
+            st.session_state.busca_conflitos_por_sala = {}
             st.error("O horário final deve ser depois do horário inicial.")
         else:
             data_iso = data_busca.strftime("%Y-%m-%d")
@@ -178,6 +197,12 @@ def pagina_buscar_salas(usuario):
             st.session_state.busca_data_iso = data_iso
             st.session_state.busca_hora_inicio = inicio_txt
             st.session_state.busca_hora_fim = fim_txt
+            st.session_state.busca_necessita_equipamentos = (
+                necessita_equipamentos
+            )
+            st.session_state.busca_evento_institucional = (
+                evento_institucional
+            )
 
             try:
                 reservas_ativas = listar_reservas_ativas_para_busca(usuario)
@@ -185,36 +210,58 @@ def pagina_buscar_salas(usuario):
                 st.error(f"Não foi possível consultar reservas: {erro}")
                 reservas_ativas = []
 
-            salas_ocupadas = set()
-
-            for reserva in reservas_ativas:
-                if reserva.get("data") != data_iso:
-                    continue
-
-                inicio_reserva = reserva.get("hora_inicio", "")
-                fim_reserva = reserva.get("hora_fim", "")
-
-                # Considera indisponíveis os horários que se sobrepõem.
-                if inicio_txt < fim_reserva and fim_txt > inicio_reserva:
-                    salas_ocupadas.add(str(reserva.get("sala_id")))
-
-            st.session_state.resultado_busca = [
+            salas_encontradas = [
                 sala
                 for sala in st.session_state.get("salas", [])
                 if sala["capacidade"] >= pessoas
-                and str(sala["id"]) not in salas_ocupadas
             ]
+
+            conflitos_por_sala = {}
+
+            for sala in salas_encontradas:
+                conflitos = buscar_conflitos(
+                    reservas=reservas_ativas,
+                    sala_id=sala["id"],
+                    data=data_iso,
+                    hora_inicio=inicio_txt,
+                    hora_fim=fim_txt,
+                )
+
+                if conflitos:
+                    conflitos_por_sala[str(sala["id"])] = conflitos
+
+            st.session_state.resultado_busca = salas_encontradas
+            st.session_state.busca_conflitos_por_sala = conflitos_por_sala
 
     resultado = st.session_state.get("resultado_busca")
 
     if resultado is not None:
         if resultado:
+            conflitos_por_sala = st.session_state.get(
+                "busca_conflitos_por_sala",
+                {},
+            )
+
+            if conflitos_por_sala:
+                st.warning(
+                    "Algumas salas têm pedidos que se sobrepõem a esse "
+                    "horário. Você ainda pode enviar o pedido; ele será "
+                    "sinalizado para análise do administrador."
+                )
+
             st.success(
-                f"Encontramos {len(resultado)} sala(s) disponível(is)!"
+                f"Encontramos {len(resultado)} sala(s) "
+                "com a capacidade selecionada."
             )
             colunas = st.columns(3)
 
             for indice, sala in enumerate(resultado):
+                if str(sala["id"]) in conflitos_por_sala:
+                    st.warning(
+                        f"A sala {sala['nome']} tem conflito de horário. "
+                        "O administrador precisará analisar o pedido."
+                    )
+
                 render_sala_card(
                     sala=sala,
                     coluna=colunas[indice % 3],
@@ -223,8 +270,7 @@ def pagina_buscar_salas(usuario):
                 )
         else:
             st.warning(
-                "Nenhuma sala livre para esses critérios. "
-                "Tente outro horário ou capacidade."
+                "Nenhuma sala atende à capacidade selecionada."
             )
 
 
