@@ -1,332 +1,518 @@
-﻿from datetime import date, time
+from datetime import date, datetime, time
+
 import streamlit as st
 
-from utils.estado import (
-    sala_por_id, reservas_de, salas_de, reservas_das_salas, adicionar_sala,
-    listar_usuarios_admin, alterar_tipo_usuario_admin,
-    confirmar_email_manualmente_admin, excluir_usuario_admin,
-    desativar_usuario_admin, ativar_usuario_admin,
-    TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN,
-)
-from utils.componentes import render_card, render_secao_titulo, render_lista_reservas, render_sala_card
 from controllers.autorizacao_controller import exigir_tipo
+from controllers.reserva_controller import (
+    listar_reservas_ativas_para_busca,
+    listar_reservas_usuario,
+)
+from utils.componentes import (
+    render_card,
+    render_secao_titulo,
+    render_sala_card,
+)
+from utils.estado import (
+    TIPO_ADMIN,
+    TIPO_LOCATARIO,
+    TIPO_PROPRIETARIO,
+    adicionar_sala,
+    sala_por_id,
+    salas_de,
+)
+from views.admin_view import renderizar_admin_usuarios
+from views.reserva_view import renderizar_reservas
+
+
+def _formatar_data(data_iso):
+    try:
+        return date.fromisoformat(data_iso).strftime("%d/%m/%Y")
+    except (TypeError, ValueError):
+        return data_iso or "—"
 
 
 # ==========================================
-# # PAGINAS - LOCATARIO
+# PÁGINAS — LOCATÁRIO
 # ==========================================
 
 def pagina_dashboard_locatario(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
-    st.markdown(f'<div class="titulo">Ola, {usuario["nome"].split()[0]}! </div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitulo">Encontre uma sala para o seu proximo compromisso.</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="titulo">Olá, {usuario["nome"].split()[0]}! 👋</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="subtitulo">'
+        "Encontre uma sala para o seu próximo compromisso."
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
-    minhas_reservas = reservas_de(usuario["nome"])
-    hoje = "17/08/2026"
-    reservas_hoje = [r for r in minhas_reservas if r["data"] == hoje]
-    confirmadas_hoje = [r for r in reservas_hoje if r["status"] == "Confirmada"]
-    proxima = minhas_reservas[0] if minhas_reservas else None
+    try:
+        minhas_reservas = listar_reservas_usuario(usuario)
+    except Exception as erro:
+        st.error(f"Não foi possível carregar suas reservas: {erro}")
+        minhas_reservas = []
+
+    hoje = date.today().isoformat()
+    reservas_hoje = [
+        reserva
+        for reserva in minhas_reservas
+        if reserva.get("data") == hoje
+    ]
+    aprovadas_hoje = [
+        reserva
+        for reserva in reservas_hoje
+        if reserva.get("status") == "Aprovada"
+    ]
+
+    reservas_ativas = [
+        reserva
+        for reserva in minhas_reservas
+        if reserva.get("status") in {"Pendente", "Aprovada"}
+        and reserva.get("data", "") >= hoje
+    ]
+    proxima = min(
+        reservas_ativas,
+        key=lambda reserva: (
+            reserva.get("data", ""),
+            reserva.get("hora_inicio", ""),
+        ),
+        default=None,
+    )
 
     col1, col2, col3, col4 = st.columns(4)
+
     with col1:
-        render_card(" Reservas hoje", len(reservas_hoje), f"{len(confirmadas_hoje)} confirmacao(oes)")
+        render_card(
+            "📅 Reservas hoje",
+            len(reservas_hoje),
+            f"{len(aprovadas_hoje)} aprovada(s)",
+        )
+
     with col2:
-        render_card(" Salas cadastradas", len(st.session_state.salas), "No sistema")
+        render_card(
+            "🏢 Salas cadastradas",
+            len(st.session_state.get("salas", [])),
+            "No sistema",
+        )
+
     with col3:
-        render_card(" Minhas reservas", len(minhas_reservas), "Total ativo")
+        render_card(
+            "📋 Minhas reservas",
+            len(minhas_reservas),
+            "Total de pedidos",
+        )
+
     with col4:
         if proxima:
-            sala = sala_por_id(proxima["sala_id"])
-            render_card("⏰ Proxima reserva", proxima["horario"].split(" - ")[0], sala["nome"])
+            render_card(
+                "⏰ Próxima reserva",
+                proxima.get("hora_inicio", "—"),
+                proxima.get("sala_nome", "Sala"),
+            )
         else:
-            render_card("⏰ Proxima reserva", "—", "Nenhuma agendada")
+            render_card(
+                "⏰ Próxima reserva",
+                "—",
+                "Nenhuma agendada",
+            )
 
-    if proxima:
-        sala = sala_por_id(proxima["sala_id"])
-        st.markdown(f"""
-        <div class="secao">
-            <div class="secao-titulo"> Minha proxima reserva</div>
-            <div class="reserva">
-                <div class="reserva-titulo"> {sala['nome']}</div>
-                <div class="reserva-info">
-                     {proxima['data']} &nbsp;&nbsp;|&nbsp;&nbsp;
-                    ⏰ {proxima['horario']} &nbsp;&nbsp;|&nbsp;&nbsp;
-                     ate {sala['capacidade']} pessoas
-                </div>
-                <div class="reserva-info"> {sala['andar']}</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    render_secao_titulo(" Minhas proximas reservas")
-    render_lista_reservas(minhas_reservas)
+    st.subheader("Status das minhas reservas")
+    renderizar_reservas(usuario)
 
 
 def pagina_buscar_salas(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
-    st.markdown('<div class="titulo">Buscar Salas </div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitulo">Filtre por data, horario e capacidade.</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="titulo">Buscar Salas 🔎</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="subtitulo">'
+        "Filtre por data, horário e capacidade."
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
-    render_secao_titulo(" Encontre uma sala disponivel")
+    render_secao_titulo("🔎 Encontre uma sala disponível")
 
     col1, col2, col3, col4 = st.columns(4)
+
     with col1:
-        data_busca = st.date_input("Data", value=date(2026, 8, 17))
+        data_busca = st.date_input(
+            "Data",
+            value=date.today(),
+        )
+
     with col2:
-        horario_inicio = st.time_input("Horario inicial", value=time(9, 0))
+        horario_inicio = st.time_input(
+            "Horário inicial",
+            value=time(9, 0),
+        )
+
     with col3:
-        horario_fim = st.time_input("Horario final", value=time(10, 0))
+        horario_fim = st.time_input(
+            "Horário final",
+            value=time(10, 0),
+        )
+
     with col4:
-        pessoas = st.number_input("Quantidade de pessoas", min_value=1, value=4)
+        pessoas = st.number_input(
+            "Quantidade de pessoas",
+            min_value=1,
+            value=4,
+        )
 
-    if st.button(" Procurar salas", type="primary"):
-        st.session_state.busca_data_fmt = data_busca.strftime("%d/%m/%Y")
-        st.session_state.busca_horario_fmt = f"{horario_inicio.strftime('%H:%M')} - {horario_fim.strftime('%H:%M')}"
+    if st.button("🔎 Procurar salas", type="primary"):
+        if horario_fim <= horario_inicio:
+            st.session_state.resultado_busca = []
+            st.error("O horário final deve ser depois do horário inicial.")
+        else:
+            data_iso = data_busca.strftime("%Y-%m-%d")
+            inicio_txt = horario_inicio.strftime("%H:%M")
+            fim_txt = horario_fim.strftime("%H:%M")
 
-        ocupadas_no_horario = {
-            r["sala_id"] for r in st.session_state.reservas
-            if r["data"] == st.session_state.busca_data_fmt
-            and r["horario"] == st.session_state.busca_horario_fmt
-        }
+            st.session_state.busca_data_iso = data_iso
+            st.session_state.busca_hora_inicio = inicio_txt
+            st.session_state.busca_hora_fim = fim_txt
 
-        st.session_state.resultado_busca = [
-            s for s in st.session_state.salas
-            if s["capacidade"] >= pessoas and s["id"] not in ocupadas_no_horario
-        ]
+            try:
+                reservas_ativas = listar_reservas_ativas_para_busca(usuario)
+            except Exception as erro:
+                st.error(f"Não foi possível consultar reservas: {erro}")
+                reservas_ativas = []
 
-    resultado = st.session_state.resultado_busca
+            salas_ocupadas = set()
+
+            for reserva in reservas_ativas:
+                if reserva.get("data") != data_iso:
+                    continue
+
+                inicio_reserva = reserva.get("hora_inicio", "")
+                fim_reserva = reserva.get("hora_fim", "")
+
+                # Considera indisponíveis os horários que se sobrepõem.
+                if inicio_txt < fim_reserva and fim_txt > inicio_reserva:
+                    salas_ocupadas.add(str(reserva.get("sala_id")))
+
+            st.session_state.resultado_busca = [
+                sala
+                for sala in st.session_state.get("salas", [])
+                if sala["capacidade"] >= pessoas
+                and str(sala["id"]) not in salas_ocupadas
+            ]
+
+    resultado = st.session_state.get("resultado_busca")
+
     if resultado is not None:
         if resultado:
-            st.success(f"Encontramos {len(resultado)} sala(s) disponivel(is)!")
+            st.success(
+                f"Encontramos {len(resultado)} sala(s) disponível(is)!"
+            )
             colunas = st.columns(3)
-            for idx, sala in enumerate(resultado):
-                render_sala_card(sala, colunas[idx % 3], contexto="busca", usuario_atual_nome=usuario["nome"])
+
+            for indice, sala in enumerate(resultado):
+                render_sala_card(
+                    sala=sala,
+                    coluna=colunas[indice % 3],
+                    contexto="busca",
+                    usuario_atual=usuario,
+                )
         else:
-            st.warning("Nenhuma sala livre para esses criterios. Tente outro horario ou capacidade.")
+            st.warning(
+                "Nenhuma sala livre para esses critérios. "
+                "Tente outro horário ou capacidade."
+            )
 
 
 def pagina_minhas_reservas(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
-    st.markdown('<div class="titulo">Minhas Reservas </div>', unsafe_allow_html=True)
-    render_secao_titulo(" Todas as suas reservas")
-    render_lista_reservas(reservas_de(usuario["nome"]), permitir_cancelar=True)
+    st.markdown(
+        '<div class="titulo">Minhas Reservas 📅</div>',
+        unsafe_allow_html=True,
+    )
+    renderizar_reservas(usuario)
 
 
 def pagina_favoritos(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
-    st.markdown('<div class="titulo">Favoritos </div>', unsafe_allow_html=True)
-    favoritas = [s for s in st.session_state.salas if s["id"] in st.session_state.favoritos]
+    st.markdown(
+        '<div class="titulo">Favoritos ❤️</div>',
+        unsafe_allow_html=True,
+    )
+
+    favoritas = [
+        sala
+        for sala in st.session_state.get("salas", [])
+        if sala["id"] in st.session_state.get("favoritos", set())
+    ]
 
     if not favoritas:
-        st.caption("Voce ainda nao favoritou nenhuma sala. Va em 'Buscar Salas' e clique no coracao .")
+        st.caption(
+            "Você ainda não favoritou nenhuma sala. "
+            "Vá em 'Buscar Salas' e clique no coração."
+        )
         return
 
-    render_secao_titulo(" Salas favoritas")
+    render_secao_titulo("❤️ Salas favoritas")
     colunas = st.columns(3)
-    for idx, sala in enumerate(favoritas):
-        render_sala_card(sala, colunas[idx % 3], contexto="favoritos", usuario_atual_nome=usuario["nome"])
+
+    for indice, sala in enumerate(favoritas):
+        render_sala_card(
+            sala=sala,
+            coluna=colunas[indice % 3],
+            contexto="favoritos",
+            usuario_atual=usuario,
+        )
 
 
 def pagina_perfil(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
-    st.markdown('<div class="titulo">Meu Perfil </div>', unsafe_allow_html=True)
-    render_secao_titulo("Dados do usuario")
+    st.markdown(
+        '<div class="titulo">Meu Perfil 👤</div>',
+        unsafe_allow_html=True,
+    )
+    render_secao_titulo("Dados do usuário")
     st.write(f"**Nome:** {usuario['nome']}")
     st.write(f"**Tipo de conta:** {usuario['tipo']}")
-    st.write(f"**Total de reservas:** {len(reservas_de(usuario['nome']))}")
-    st.write(f"**Salas favoritas:** {len(st.session_state.favoritos)}")
+
+    try:
+        total_reservas = len(listar_reservas_usuario(usuario))
+    except Exception:
+        total_reservas = 0
+
+    st.write(f"**Total de reservas:** {total_reservas}")
+    st.write(
+        f"**Salas favoritas:** "
+        f"{len(st.session_state.get('favoritos', set()))}"
+    )
 
 
 # ==========================================
-# PAGINAS - PROPRIETARIO
+# PÁGINAS — PROPRIETÁRIO
 # ==========================================
 
 def pagina_dashboard_proprietario(usuario):
     exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
 
-    st.markdown(f'<div class="titulo">Ola, {usuario["nome"].split()[0]}! </div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitulo">Acompanhe suas salas e reservas.</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="titulo">Olá, '
+        f'{usuario["nome"].split()[0]}! 👋</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="subtitulo">'
+        "Acompanhe suas salas e os pedidos recebidos."
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
     minhas_salas = salas_de(usuario["login"])
-    minhas_salas_ids = [s["id"] for s in minhas_salas]
-    reservas_recebidas = reservas_das_salas(minhas_salas_ids)
-    confirmadas = len([r for r in reservas_recebidas if r["status"] == "Confirmada"])
-    taxa = round(100 * confirmadas / len(reservas_recebidas)) if reservas_recebidas else 0
+
+    try:
+        reservas_recebidas = listar_reservas_usuario(usuario)
+    except Exception as erro:
+        st.error(f"Não foi possível carregar os pedidos: {erro}")
+        reservas_recebidas = []
+
+    pendentes = [
+        reserva
+        for reserva in reservas_recebidas
+        if reserva.get("status") == "Pendente"
+    ]
+    aprovadas = [
+        reserva
+        for reserva in reservas_recebidas
+        if reserva.get("status") == "Aprovada"
+    ]
+
+    taxa_aprovacao = (
+        round(100 * len(aprovadas) / len(reservas_recebidas))
+        if reservas_recebidas
+        else 0
+    )
 
     col1, col2, col3, col4 = st.columns(4)
+
     with col1:
-        render_card(" Salas cadastradas", len(minhas_salas), "Salas ativas")
+        render_card("Salas cadastradas", len(minhas_salas), "Nas suas salas")
+
     with col2:
-        render_card(" Reservas recebidas", len(reservas_recebidas), f"{confirmadas} confirmadas")
+        render_card(
+            "Pedidos recebidos",
+            len(reservas_recebidas),
+            "Total",
+        )
+
     with col3:
-        render_card(" Faturamento", "R$ 2.450", "Este mes")
+        render_card(
+            "Pedidos pendentes",
+            len(pendentes),
+            "Aguardando decisão do administrador",
+        )
+
     with col4:
-        render_card(" Taxa de confirmacao", f"{taxa}%", "Sobre reservas recebidas")
+        render_card(
+            "Taxa aprovada",
+            f"{taxa_aprovacao}%",
+            "Sobre pedidos recebidos",
+        )
 
-    render_secao_titulo(" Resumo de ocupacao")
-    st.line_chart({"Semana 1": 45, "Semana 2": 62, "Semana 3": 55, "Semana 4": 72})
-
-    render_secao_titulo(" Reservas recentes nas suas salas")
-    render_lista_reservas(reservas_recebidas, mostrar_cliente=True)
+    st.subheader("Pedidos para minhas salas")
+    renderizar_reservas(usuario)
 
     st.markdown("---")
-    with st.expander(" Cadastrar nova sala"):
+
+    with st.expander("Cadastrar nova sala"):
         with st.form("form_nova_sala", clear_on_submit=True):
             col1, col2 = st.columns(2)
+
             with col1:
                 nome = st.text_input("Nome da sala")
-                capacidade = st.number_input("Capacidade", min_value=1, value=4)
-            with col2:
-                localizacao = st.text_input("Localizacao (ex: 2o andar)")
+                capacidade = st.number_input(
+                    "Capacidade",
+                    min_value=1,
+                    value=4,
+                )
 
-            st.caption("Recursos disponiveis")
+            with col2:
+                localizacao = st.text_input(
+                    "Localização (ex: 2º andar)"
+                )
+
+            st.caption("Recursos disponíveis")
             rc1, rc2, rc3 = st.columns(3)
+
             with rc1:
                 projetor = st.checkbox("Projetor")
                 computador = st.checkbox("Computador")
+
             with rc2:
                 internet = st.checkbox("Wi-Fi")
                 webcam = st.checkbox("Webcam")
+
             with rc3:
                 quadro = st.checkbox("Quadro branco")
                 ar_condicionado = st.checkbox("Ar-condicionado")
 
-            salvar = st.form_submit_button("Salvar sala", type="primary")
+            salvar = st.form_submit_button(
+                "Salvar sala",
+                type="primary",
+            )
 
         if salvar:
             if not nome.strip():
                 st.error("Informe o nome da sala.")
             else:
                 recursos_marcados = [
-                    chave for chave, marcado in {
+                    chave
+                    for chave, marcado in {
                         "projetor": projetor,
                         "computador": computador,
                         "internet": internet,
                         "webcam": webcam,
                         "quadro": quadro,
                         "ar_condicionado": ar_condicionado,
-                    }.items() if marcado
+                    }.items()
+                    if marcado
                 ]
-                adicionar_sala(
-                    nome=nome.strip(),
-                    capacidade=capacidade,
-                    localizacao=localizacao.strip(),
-                    proprietario=usuario["login"],
-                    recursos_marcados=recursos_marcados,
-                )
-                st.success(f"Sala '{nome}' cadastrada com sucesso!")
-                st.rerun()
+
+                try:
+                    adicionar_sala(
+                        nome=nome.strip(),
+                        capacidade=capacidade,
+                        localizacao=localizacao.strip(),
+                        proprietario=usuario["login"],
+                        recursos_marcados=recursos_marcados,
+                    )
+                    st.success(f"Sala '{nome}' cadastrada com sucesso!")
+                    st.rerun()
+                except Exception as erro:
+                    st.error(f"Não foi possível cadastrar a sala: {erro}")
 
 
 def pagina_minhas_salas(usuario):
     exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
 
-    st.markdown('<div class="titulo">Minhas Salas </div>', unsafe_allow_html=True)
-    render_secao_titulo("Salas cadastradas por voce")
+    st.markdown(
+        '<div class="titulo">Minhas Salas 🏢</div>',
+        unsafe_allow_html=True,
+    )
+    render_secao_titulo("Salas cadastradas por você")
 
     minhas_salas = salas_de(usuario["login"])
+
     if not minhas_salas:
-        st.caption("Voce ainda nao cadastrou nenhuma sala.")
+        st.caption("Você ainda não cadastrou nenhuma sala.")
         return
 
     colunas = st.columns(3)
-    for idx, sala in enumerate(minhas_salas):
-        with colunas[idx % 3]:
+
+    for indice, sala in enumerate(minhas_salas):
+        with colunas[indice % 3]:
             st.markdown(f"""
             <div class="sala">
-                <div class="sala-titulo"> {sala['nome']}</div>
-                <div class="sala-info"> Capacidade: {sala['capacidade']} pessoas</div>
-                <div class="sala-info"> {sala['recursos']}</div>
-                <div class="sala-info"> {sala['andar']}</div>
+                <div class="sala-titulo">🏢 {sala['nome']}</div>
+                <div class="sala-info">
+                    👥 Capacidade: {sala['capacidade']} pessoas
+                </div>
+                <div class="sala-info">🖥️ {sala['recursos']}</div>
+                <div class="sala-info">📍 {sala['andar']}</div>
             </div>
             """, unsafe_allow_html=True)
+
+
+def pagina_pedidos_proprietario(usuario):
+    exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
+
+    st.markdown(
+        '<div class="titulo">Pedidos para minhas salas</div>',
+        unsafe_allow_html=True,
+    )
+    renderizar_reservas(usuario)
 
 
 def pagina_perfil_proprietario(usuario):
     exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
 
-    st.markdown('<div class="titulo">Meu Perfil</div>', unsafe_allow_html=True)
-    render_secao_titulo("Dados do usuario")
+    st.markdown(
+        '<div class="titulo">Meu Perfil 👤</div>',
+        unsafe_allow_html=True,
+    )
+    render_secao_titulo("Dados do usuário")
     st.write(f"**Nome:** {usuario['nome']}")
     st.write(f"**Tipo de conta:** {usuario['tipo']}")
     st.write(f"**Salas cadastradas:** {len(salas_de(usuario['login']))}")
 
 
 # ==========================================
-# PAGINAS - ADMINISTRADOR
+# PÁGINAS — ADMINISTRADOR
 # ==========================================
 
 def pagina_admin(usuario):
     exigir_tipo(usuario, [TIPO_ADMIN])
 
-    st.markdown('<div class="titulo">Administracao</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="subtitulo">Gerencie as contas cadastradas no sistema.</div>',
+        '<div class="titulo">Administração</div>',
         unsafe_allow_html=True,
     )
 
-    usuarios = listar_usuarios_admin()
+    st.subheader("Pedidos de reserva")
+    renderizar_reservas(usuario)
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        render_card(" Total de contas", len(usuarios), "No sistema")
-    with col2:
-        confirmadas = len([u for u in usuarios if u["email_confirmado"]])
-        render_card(" E-mails confirmados", confirmadas, f"de {len(usuarios)}")
-    with col3:
-        admins = len([u for u in usuarios if u["tipo"] == TIPO_ADMIN])
-        render_card(" Administradores", admins, "Contas com acesso total")
-
-    render_secao_titulo("Contas cadastradas")
-
-    for dados in usuarios:
-        cols = st.columns([2, 2, 1.2, 1.2, 1.2, 1, 1])
-        with cols[0]:
-            st.write(f"**{dados['nome_completo'] or dados['nome_usuario']}**")
-            st.caption(f"@{dados['nome_usuario']}")
-        with cols[1]:
-            st.write(dados["email"])
-        with cols[2]:
-            st.write(" Confirmado" if dados["email_confirmado"] else " Pendente")
-            st.caption(" Ativo" if dados["ativo"] else " Bloqueado")
-        with cols[3]:
-            novo_tipo = st.selectbox(
-                "Tipo", [TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN],
-                index=([TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN].index(dados["tipo"]) if dados["tipo"] in [TIPO_LOCATARIO, TIPO_PROPRIETARIO, TIPO_ADMIN] else 0),
-                key=f"tipo_{dados['id']}", label_visibility="collapsed",
-            )
-            if novo_tipo != dados["tipo"]:
-                alterar_tipo_usuario_admin(dados["id"], novo_tipo)
-                st.rerun()
-        with cols[4]:
-            if not dados["email_confirmado"]:
-                if st.button("Confirmar", key=f"confirmar_{dados['id']}"):
-                    confirmar_email_manualmente_admin(dados["id"])
-                    st.rerun()
-        with cols[5]:
-            if dados["id"] != usuario["id"]:
-                if dados["ativo"]:
-                    if st.button(" Bloquear", key=f"bloquear_{dados['id']}"):
-                        desativar_usuario_admin(dados["id"])
-                        st.rerun()
-                else:
-                    if st.button(" Reativar", key=f"reativar_{dados['id']}"):
-                        ativar_usuario_admin(dados["id"])
-                        st.rerun()
-        with cols[6]:
-            if dados["id"] != usuario["id"]:
-                if st.button(" Excluir", key=f"excluir_{dados['id']}"):
-                    excluir_usuario_admin(dados["id"])
-                    st.rerun()
-        st.divider()
+    st.divider()
+    renderizar_admin_usuarios(usuario)
 
 
-
+# ==========================================
+# MENUS POR PERFIL
+# ==========================================
 
 PAGINAS_LOCATARIO = {
     "Dashboard": pagina_dashboard_locatario,
@@ -339,14 +525,13 @@ PAGINAS_LOCATARIO = {
 PAGINAS_PROPRIETARIO = {
     "Dashboard": pagina_dashboard_proprietario,
     "Minhas Salas": pagina_minhas_salas,
+    "Pedidos de Reserva": pagina_pedidos_proprietario,
     "Perfil": pagina_perfil_proprietario,
 }
 
-# O administrador tem acesso total: todas as paginas de proprietario
-# (para poder gerenciar salas do sistema) mais o painel de contas.
 PAGINAS_ADMIN = {
     **PAGINAS_PROPRIETARIO,
-    "Administracao": pagina_admin,
+    "Administração": pagina_admin,
 }
 
 PAGINAS_POR_TIPO = {
@@ -357,14 +542,17 @@ PAGINAS_POR_TIPO = {
 
 
 def menu_para(tipo_usuario):
-    """app.py usa isso para saber quais itens mostrar no menu,
-    ja que cada tipo de conta tem paginas diferentes."""
-    paginas = PAGINAS_POR_TIPO.get(tipo_usuario, PAGINAS_LOCATARIO)
+    paginas = PAGINAS_POR_TIPO.get(
+        tipo_usuario,
+        PAGINAS_LOCATARIO,
+    )
     return list(paginas.keys())
 
 
 def render_pagina(pagina, usuario):
-    paginas = PAGINAS_POR_TIPO.get(usuario["tipo"], PAGINAS_LOCATARIO)
+    paginas = PAGINAS_POR_TIPO.get(
+        usuario["tipo"],
+        PAGINAS_LOCATARIO,
+    )
     funcao = paginas.get(pagina, next(iter(paginas.values())))
     funcao(usuario)
-
