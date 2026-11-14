@@ -10,7 +10,7 @@ from utils.estado import (
 )
 from utils.componentes import render_card, render_secao_titulo, render_lista_reservas, render_sala_card
 from controllers.autorizacao_controller import exigir_tipo
-
+from views.mapa_campus_view import pagina_mapa_campus
 
 # ==========================================
 # # PAGINAS - LOCATARIO
@@ -329,6 +329,7 @@ def pagina_admin(usuario):
 
 
 PAGINAS_LOCATARIO = {
+    "Mapa do Campus": pagina_mapa_campus,
     "Dashboard": pagina_dashboard_locatario,
     "Buscar Salas": pagina_buscar_salas,
     "Minhas Reservas": pagina_minhas_reservas,
