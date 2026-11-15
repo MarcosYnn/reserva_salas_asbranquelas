@@ -50,8 +50,17 @@ MAPA_RECURSOS = [
 
 def _linha_sala_para_dict(linha):
     (
-        id_sala, nome, capacidade, localizacao,
-        projetor, computador, internet, webcam, quadro, ar_condicionado
+        id_sala,
+        nome,
+        capacidade,
+        localizacao,
+        projetor,
+        computador,
+        internet,
+        webcam,
+        quadro,
+        ar_condicionado,
+        proprietario
     ) = linha
 
     flags = {
@@ -64,7 +73,9 @@ def _linha_sala_para_dict(linha):
     }
 
     recursos = " • ".join(
-        rotulo for chave, rotulo in MAPA_RECURSOS if flags[chave]
+        rotulo
+        for chave, rotulo in MAPA_RECURSOS
+        if flags[chave]
     ) or "Sem recursos cadastrados"
 
     return {
@@ -72,7 +83,7 @@ def _linha_sala_para_dict(linha):
         "nome": nome,
         "capacidade": capacidade,
         "andar": localizacao,
-        "proprietario": st.session_state.donos_salas.get(id_sala, PROPRIETARIO_PADRAO),
+        "proprietario": proprietario or PROPRIETARIO_PADRAO,
         "recursos": recursos,
     }
 
@@ -86,7 +97,7 @@ def recarregar_salas():
 
 
 def adicionar_sala(nome, capacidade, localizacao, proprietario, recursos_marcados):
-    db.cadastrar_sala(
+    novo_id = db.cadastrar_sala(
         nome=nome,
         capacidade=capacidade,
         localizacao=localizacao,
@@ -96,8 +107,9 @@ def adicionar_sala(nome, capacidade, localizacao, proprietario, recursos_marcado
         webcam="webcam" in recursos_marcados,
         quadro="quadro" in recursos_marcados,
         ar_condicionado="ar_condicionado" in recursos_marcados,
+        proprietario=proprietario,
     )
-    novo_id = db.listar_salas()[0][0]
+
     st.session_state.donos_salas[novo_id] = proprietario
     recarregar_salas()
 

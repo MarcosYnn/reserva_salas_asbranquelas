@@ -1,4 +1,4 @@
-from datetime import date, time
+﻿from datetime import date, time
 import streamlit as st
 
 from views.admin_view import mostrar_admin
@@ -26,6 +26,73 @@ from utils.componentes import (
     render_sala_card,
 )
 from controllers.autorizacao_controller import exigir_tipo
+
+
+def formulario_cadastro_sala(usuario):
+    with st.expander("➕ Cadastrar nova sala"):
+        with st.form("form_nova_sala", clear_on_submit=True):
+            col1, col2 = st.columns(2)
+
+            with col1:
+                nome = st.text_input("Nome da sala")
+                capacidade = st.number_input(
+                    "Capacidade", min_value=1, value=4
+                )
+
+            with col2:
+                localizacao = st.text_input(
+                    "Localização (ex: 2º andar)"
+                )
+
+            st.caption("Recursos disponíveis")
+
+            rc1, rc2, rc3 = st.columns(3)
+
+            with rc1:
+                projetor = st.checkbox("Projetor")
+                computador = st.checkbox("Computador")
+
+            with rc2:
+                internet = st.checkbox("Wi-Fi")
+                webcam = st.checkbox("Webcam")
+
+            with rc3:
+                quadro = st.checkbox("Quadro branco")
+                ar_condicionado = st.checkbox("Ar-condicionado")
+
+            salvar = st.form_submit_button(
+                "Salvar sala", type="primary"
+            )
+
+        if salvar:
+            if not nome.strip():
+                st.error("Informe o nome da sala.")
+            else:
+                recursos_marcados = [
+                    chave
+                    for chave, marcado in {
+                        "projetor": projetor,
+                        "computador": computador,
+                        "internet": internet,
+                        "webcam": webcam,
+                        "quadro": quadro,
+                        "ar_condicionado": ar_condicionado,
+                    }.items()
+                    if marcado
+                ]
+
+                adicionar_sala(
+                    nome=nome.strip(),
+                    capacidade=capacidade,
+                    localizacao=localizacao.strip(),
+                    proprietario=usuario["login"],
+                    recursos_marcados=recursos_marcados,
+                )
+
+                st.success(
+                    f"Sala '{nome}' cadastrada com sucesso!"
+                )
+                st.rerun()
 
 
 # ==========================================
@@ -349,74 +416,7 @@ def pagina_dashboard_proprietario(usuario):
 
     st.markdown("---")
 
-    with st.expander("Cadastrar nova sala"):
-        with st.form("form_nova_sala", clear_on_submit=True):
-            col1, col2 = st.columns(2)
-
-            with col1:
-                nome = st.text_input("Nome da sala")
-                capacidade = st.number_input(
-                    "Capacidade",
-                    min_value=1,
-                    value=4,
-                )
-
-            with col2:
-                localizacao = st.text_input(
-                    "Localização (ex: 2º andar)"
-                )
-
-            st.caption("Recursos disponíveis")
-
-            rc1, rc2, rc3 = st.columns(3)
-
-            with rc1:
-                projetor = st.checkbox("Projetor")
-                computador = st.checkbox("Computador")
-
-            with rc2:
-                internet = st.checkbox("Wi-Fi")
-                webcam = st.checkbox("Webcam")
-
-            with rc3:
-                quadro = st.checkbox("Quadro branco")
-                ar_condicionado = st.checkbox("Ar-condicionado")
-
-            salvar = st.form_submit_button(
-                "Salvar sala",
-                type="primary",
-            )
-
-        if salvar:
-            if not nome.strip():
-                st.error("Informe o nome da sala.")
-            else:
-                recursos_marcados = [
-                    chave
-                    for chave, marcado in {
-                        "projetor": projetor,
-                        "computador": computador,
-                        "internet": internet,
-                        "webcam": webcam,
-                        "quadro": quadro,
-                        "ar_condicionado": ar_condicionado,
-                    }.items()
-                    if marcado
-                ]
-
-                adicionar_sala(
-                    nome=nome.strip(),
-                    capacidade=capacidade,
-                    localizacao=localizacao.strip(),
-                    proprietario=usuario["login"],
-                    recursos_marcados=recursos_marcados,
-                )
-
-                st.success(
-                    f"Sala '{nome}' cadastrada com sucesso!"
-                )
-                st.rerun()
-
+    formulario_cadastro_sala(usuario)
 
 def pagina_minhas_salas(usuario):
     exigir_tipo(usuario, [TIPO_PROPRIETARIO, TIPO_ADMIN])
@@ -427,6 +427,12 @@ def pagina_minhas_salas(usuario):
     )
     render_secao_titulo("Salas cadastradas por você")
 
+    # Formulário para cadastrar novas salas
+    formulario_cadastro_sala(usuario)
+
+    st.markdown("---")
+
+    # Lista as salas cadastradas
     minhas_salas = salas_de(usuario["login"])
 
     if not minhas_salas:

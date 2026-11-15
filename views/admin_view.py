@@ -93,8 +93,26 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
 
     pagina = st.session_state.admin_pagina
     st.markdown(f'<div class="page-header">{escape(pagina)}<small>Sistema de Reserva de Salas · Campus Central</small></div>', unsafe_allow_html=True)
+    
+    
+    
+    
+    if pagina == "Salas":
+        from main import pagina_minhas_salas
 
+        usuario = st.session_state.get("usuario")
+
+        if usuario:
+            pagina_minhas_salas(usuario)
+        else:
+            st.error("Usuário não encontrado. Faça login novamente.")
+
+        return
     if pagina != "Início":
+        
+        
+        
+        
         st.title(pagina)
         secao = st.session_state.get("admin_secao")
         if secao:

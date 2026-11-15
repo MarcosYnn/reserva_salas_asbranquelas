@@ -66,6 +66,15 @@ def criar_tabelas():
     if "ativo" not in colunas_existentes:
         cursor.execute("ALTER TABLE usuarios ADD COLUMN ativo INTEGER NOT NULL DEFAULT 1")
 
+    # Migração: adiciona o proprietário às salas existentes
+    cursor.execute("PRAGMA table_info(salas)")
+    colunas_salas = {linha[1] for linha in cursor.fetchall()}
+
+    if "proprietario" not in colunas_salas:
+        cursor.execute(
+            "ALTER TABLE salas ADD COLUMN proprietario TEXT"
+        )
+
     conexao.commit()
     conexao.close()
 
@@ -79,7 +88,8 @@ def cadastrar_sala(
     internet,
     webcam,
     quadro,
-    ar_condicionado
+    ar_condicionado,
+    proprietario
 ):
     """Cadastra uma nova sala no banco de dados."""
 
@@ -96,9 +106,10 @@ def cadastrar_sala(
             internet,
             webcam,
             quadro,
-            ar_condicionado
+            ar_condicionado,
+            proprietario
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         nome,
         capacidade,
@@ -108,11 +119,16 @@ def cadastrar_sala(
         int(internet),
         int(webcam),
         int(quadro),
-        int(ar_condicionado)
+        int(ar_condicionado),
+        proprietario
     ))
+
+    novo_id = cursor.lastrowid
 
     conexao.commit()
     conexao.close()
+
+    return novo_id
 
 
 def listar_salas():
@@ -132,7 +148,8 @@ def listar_salas():
             internet,
             webcam,
             quadro,
-            ar_condicionado
+            ar_condicionado,
+            proprietario
         FROM salas
         ORDER BY id DESC
     """)
