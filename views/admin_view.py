@@ -35,16 +35,7 @@ section[data-testid="stSidebar"] button:hover {background:#1e3355 !important;col
 .admin-hero:before {content:"";position:absolute;border:25px solid #ffffff0a;width:160px;height:160px;border-radius:50%;right:-30px;top:-75px;}
 .admin-hero:after {content:"";position:absolute;border:22px solid #ffffff0a;width:100px;height:100px;border-radius:50%;right:65px;bottom:-70px;}
 .admin-hero .eyebrow {font-size:11px;letter-spacing:1.3px;font-weight:700;color:#bdd7ff !important;}
-div.admin-hero h2,
-div.admin-hero h2 *,
-div.admin-hero h2 span {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-    font-size: 26px !important;
-    font-weight: 700 !important;
-    line-height: 1.3 !important;
-    margin: 15px 0 9px !important;
-}
+div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !important;-webkit-text-fill-color:#ffffff !important;font-size:26px !important;font-weight:700 !important;line-height:1.3 !important;margin:15px 0 9px !important;}
 .admin-hero p {font-size:14px !important;color:#e5efff !important;margin:0;line-height:1.6;}
 /* Botão sobre o rodapé do mesmo banner, sem segunda faixa azul */
 .st-key-hero_button {background:transparent !important;padding:0 !important;margin-top:-60px !important;margin-left:28px !important;margin-bottom:36px !important;position:relative !important;z-index:2;}
@@ -71,6 +62,19 @@ div.admin-hero h2 span {
 .bar-track {height:4px;border-radius:4px;background:#e8edf6;overflow:hidden;}
 .bar-track span {height:100%;display:block;background:#2864f0;}
 @media(max-width:900px) {.admin-wrap{padding:0}.admin-hero{padding:24px 18px 75px}.st-key-hero_button{margin-left:18px !important;}}
+/* MELHORIA DA LEGIBILIDADE — dentro da tag style */
+.metric-card strong {font-size:28px !important;}
+.metric-card small {font-size:13px !important;}
+.metric-card em {font-size:14px !important;}
+.section-title {font-size:19px !important;}
+.section-hint {font-size:13px !important;}
+.action-card {min-height:125px;}
+.action-card h4 {font-size:15px !important;}
+.action-card p {font-size:13px !important;line-height:1.5 !important;}
+.st-key-actions button {font-size:12px !important;min-height:34px !important;}
+.mini-panel h4 {font-size:15px !important;}
+.mini-panel p, .reserve-line, .bar-label {font-size:12px !important;}
+.reserve-line small {font-size:11px !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -122,7 +126,7 @@ div.admin-hero h2 span {
         dados = [("▦", "7", "/10", "Salas disponíveis"),
                  ("▣", "3", "", "Reservas hoje"),
                  ("◷", "2", "", "Pendentes de conf."),
-                 ("♙", "42", "", "Usuários ativos")]
+                             ("♙", "42", "", "Usuários ativos")]
         for coluna, (icone, valor, sufixo, legenda) in zip(metricas, dados):
             with coluna:
                 st.markdown(
@@ -135,7 +139,7 @@ div.admin-hero h2 span {
         esquerda, direita = st.columns([2.1, 1], gap="medium")
         with esquerda:
             acoes = [
-                 ("♢", "Gerenciar permissões", "Defina perfis e níveis de acesso do usuário.", "Administração", "permissoes"),
+                ("♢", "Gerenciar permissões", "Defina perfis e níveis de acesso do usuário.", "Administração", "permissoes"),
                 ("♙", "Consultar usuários", "Localize os acessos já cadastrados no sistema.", "Administração", "usuarios"),
                 ("▣", "Nova reserva", "Reserve uma sala rapidamente para hoje ou amanhã.", "Reservas", "nova_reserva"),
                 ("⌖", "Ver mapa do campus", "Visualize a disponibilidade de salas por bloco.", "Mapa", "mapa"),
