@@ -1,35 +1,90 @@
 
 import os
+import math
 import streamlit as st
+from PIL import Image, ImageDraw
+
+from controllers.mapa_controller import LOCAIS, calcular_rota
 
 
-LOCAIS_CAMPUS = [
-    "Entrada Principal",
-    "Recepcao e Informacoes",
-    "Laboratorio de Informatica 1",
-    "Laboratorio de Informatica 2",
-    "Laboratorio de Informatica 3",
-    "Laboratorio de Informatica 4",
-    "Laboratorio de Informatica 5",
-    "Laboratorio de Informatica 6",
-    "Salas de Aula - Bloco A",
-    "Salas de Aula - Bloco B",
-    "Salas de Aula - Bloco C",
-    "Biblioteca",
-    "Auditorio",
-    "Anfiteatro 1",
-    "Anfiteatro 2",
-    "Espaco Maker",
-    "Praca Central",
-    "Cantina",
-    "Piscina",
-    "Quadra Poliesportiva 1",
-    "Quadra Poliesportiva 2",
-    "Laboratorio de Engenharia Civil",
-    "Laboratorio de Fisioterapia",
-    "Laboratorio de Odontologia",
-    "Laboratorio de Medicina",
-]
+LOCAIS_CAMPUS = list(LOCAIS.keys())
+
+
+def desenhar_linha_pontilhada(desenho, inicio, fim, cor, largura=7):
+    x1, y1 = inicio
+    x2, y2 = fim
+
+    distancia = math.hypot(x2 - x1, y2 - y1)
+
+    if distancia == 0:
+        return
+
+    tamanho_traco = 12
+    tamanho_espaco = 9
+    passo = tamanho_traco + tamanho_espaco
+
+    for posicao in range(0, int(distancia), passo):
+        inicio_traco = posicao / distancia
+        fim_traco = min(posicao + tamanho_traco, distancia) / distancia
+
+        ponto1 = (
+            x1 + (x2 - x1) * inicio_traco,
+            y1 + (y2 - y1) * inicio_traco
+        )
+
+        ponto2 = (
+            x1 + (x2 - x1) * fim_traco,
+            y1 + (y2 - y1) * fim_traco
+        )
+
+        desenho.line([ponto1, ponto2], fill=cor, width=largura)
+
+
+def desenhar_rota(imagem, rota):
+    mapa = imagem.convert("RGB").copy()
+    desenho = ImageDraw.Draw(mapa)
+
+    # As coordenadas do controlador usam imagem de 1535 x 1024.
+    escala_x = mapa.width / 1535
+    escala_y = mapa.height / 1024
+
+    pontos = [
+        (int(x * escala_x), int(y * escala_y))
+        for x, y in rota
+    ]
+
+    # Desenha a rota pontilhada
+    for i in range(len(pontos) - 1):
+        desenhar_linha_pontilhada(
+            desenho,
+            pontos[i],
+            pontos[i + 1],
+            cor="#0066FF",
+            largura=max(3, int(7 * escala_x))
+        )
+
+    # Marca a origem com um ponto azul
+    x, y = pontos[0]
+    raio = max(7, int(13 * escala_x))
+
+    desenho.ellipse(
+        (x - raio, y - raio, x + raio, y + raio),
+        fill="#0066FF",
+        outline="white",
+        width=3
+    )
+
+    # Marca o destino com um ponto vermelho
+    x, y = pontos[-1]
+
+    desenho.ellipse(
+        (x - raio, y - raio, x + raio, y + raio),
+        fill="#FF3333",
+        outline="white",
+        width=3
+    )
+
+    return mapa
 
 
 def pagina_mapa_campus(usuario):
@@ -39,7 +94,6 @@ def pagina_mapa_campus(usuario):
 
     st.divider()
 
-    # Escolha do destino
     st.subheader("Para onde deseja ir?")
 
     destino = st.selectbox(
@@ -47,7 +101,6 @@ def pagina_mapa_campus(usuario):
         options=[""] + LOCAIS_CAMPUS
     )
 
-    # Ponto de partida
     st.subheader("Ponto de partida")
 
     origem = st.selectbox(
@@ -60,7 +113,6 @@ def pagina_mapa_campus(usuario):
         "em uma proxima etapa."
     )
 
-    # Exibicao da imagem do mapa
     st.subheader("Visualizacao do campus")
 
     caminho_mapa = os.path.join(
@@ -69,39 +121,81 @@ def pagina_mapa_campus(usuario):
         "mapa_campus.png"
     )
 
+    # Guarda a rota entre atualizacoes do Streamlit
+    if "rota_campus" not in st.session_state:
+        st.session_state.rota_campus = None
+
+    if st.button("Buscar destino", use_container_width=True):
+
+        if not destino:
+            st.warning("Selecione o destino desejado.")
+            st.session_state.rota_campus = None
+
+        elif not origem:
+            st.warning("Selecione seu ponto de partida.")
+            st.session_state.rota_campus = None
+
+        elif origem == destino:
+            st.warning(
+                "O ponto de partida e o destino nao podem ser iguais."
+            )
+            st.session_state.rota_campus = None
+
+        else:
+            rota = calcular_rota(origem, destino)
+
+            if rota:
+                st.session_state.rota_campus = {
+                    "origem": origem,
+                    "destino": destino,
+                    "pontos": rota
+                }
+
+                st.success("Rota calculada com sucesso!")
+            else:
+                st.session_state.rota_campus = None
+                st.error("Nao foi possivel calcular a rota.")
+
+    # Carrega a imagem e desenha a rota
     if os.path.isfile(caminho_mapa) and os.path.getsize(caminho_mapa) > 0:
-        st.image(
-            caminho_mapa,
-            caption="Mapa do Campus",
-            use_container_width=True
-        )
+
+        try:
+            with Image.open(caminho_mapa) as arquivo:
+                imagem = arquivo.convert("RGB")
+
+            dados_rota = st.session_state.rota_campus
+
+            if dados_rota:
+                imagem = desenhar_rota(
+                    imagem,
+                    dados_rota["pontos"]
+                )
+
+                st.write(
+                    f"**Origem:** {dados_rota['origem']}  "
+                    f"**Destino:** {dados_rota['destino']}"
+                )
+
+            st.image(
+                imagem,
+                caption="Mapa do Campus",
+                use_container_width=True
+            )
+
+        except (OSError, ValueError):
+            st.error(
+                "Nao foi possivel abrir a imagem do mapa. "
+                "Verifique o arquivo views/assets/mapa_campus.png."
+            )
+
     else:
         st.warning(
             "Imagem nao encontrada ou vazia. "
             "Verifique se mapa_campus.png esta na pasta views/assets."
         )
 
-    # Botao para buscar destino
-    if st.button("Buscar destino", use_container_width=True):
-
-        if not destino:
-            st.warning("Selecione o destino desejado.")
-
-        elif not origem:
-            st.warning("Selecione seu ponto de partida.")
-
-        elif origem == destino:
-            st.warning(
-                "O ponto de partida e o destino nao podem ser iguais."
-            )
-
-        else:
-            st.success(
-                f"Destino: {destino}\n\n"
-                f"Partida: {origem}"
-            )
-
-            st.info(
-                "O calculo das rotas e as indicacoes de caminho "
-                "serao implementados em uma proxima etapa."
-            )
+    st.caption(
+        "Rotas ilustrativas em desenvolvimento. "
+        "Os trajetos ainda precisam ser conferidos com os "
+        "caminhos reais do campus."
+    )
