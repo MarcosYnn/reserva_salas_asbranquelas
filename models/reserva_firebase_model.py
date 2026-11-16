@@ -33,18 +33,28 @@ _TRANSICOES_PERMITIDAS = {
 
 def _validar_data_horarios(data, hora_inicio, hora_fim):
     try:
-        datetime.strptime(data, "%Y-%m-%d")
+        data_reserva = datetime.strptime(data, "%Y-%m-%d").date()
     except (TypeError, ValueError):
         raise ValueError("A data deve estar no formato AAAA-MM-DD.")
 
     try:
-        inicio = datetime.strptime(hora_inicio, "%H:%M")
-        fim = datetime.strptime(hora_fim, "%H:%M")
+        inicio = datetime.strptime(hora_inicio, "%H:%M").time()
+        fim = datetime.strptime(hora_fim, "%H:%M").time()
     except (TypeError, ValueError):
         raise ValueError("Os horários devem estar no formato HH:MM.")
 
     if fim <= inicio:
         raise ValueError("O horário final deve ser depois do inicial.")
+
+    agora = datetime.now()
+
+    if data_reserva < agora.date():
+        raise ValueError("Não é possível reservar uma sala em uma data passada.")
+
+    if data_reserva == agora.date() and inicio <= agora.time():
+        raise ValueError(
+            "Para hoje, o horário inicial deve ser posterior ao horário atual."
+        )
 
 
 def criar_reserva(
