@@ -112,7 +112,7 @@ def _cancelar_e_atualizar(usuario, reserva_id):
         st.error(str(erro))
 
 
-def renderizar_reservas(usuario):
+def renderizar_reservas(usuario, mostrar_titulo=True):
     perfil = usuario.get("tipo")
 
     if perfil not in {
@@ -123,12 +123,13 @@ def renderizar_reservas(usuario):
         st.error("Seu perfil não pode consultar reservas.")
         return
 
-    if perfil == TIPO_ADMIN:
-        st.subheader("Pedidos de reserva")
-    elif perfil == TIPO_PROPRIETARIO:
-        st.subheader("Pedidos para as suas salas")
-    else:
-        st.subheader("Minhas reservas")
+    if mostrar_titulo:
+        if perfil == TIPO_ADMIN:
+            st.subheader("Pedidos de reserva")
+        elif perfil == TIPO_PROPRIETARIO:
+            st.subheader("Pedidos para as suas salas")
+        else:
+            st.subheader("Minhas reservas")
 
     try:
         reservas = listar_reservas_usuario(usuario)
@@ -143,10 +144,22 @@ def renderizar_reservas(usuario):
     for reserva in reservas:
         reserva_id = reserva["id"]
         status = reserva.get("status", "Pendente")
+        icones_status = {
+            reserva_model.PENDENTE: "🟡",
+            reserva_model.APROVADA: "🟢",
+            reserva_model.RECUSADA: "🔴",
+            reserva_model.CANCELADA: "⚪",
+        }
+        horario = (
+            f"{reserva.get('hora_inicio', '—')}–"
+            f"{reserva.get('hora_fim', '—')}"
+        )
 
         with st.expander(
-            f"{reserva.get('sala_nome', 'Sala')} — "
-            f"{_formatar_data(reserva.get('data'))} — {status}"
+            f"🏢 {reserva.get('sala_nome', 'Sala')}  ·  "
+            f"📅 {_formatar_data(reserva.get('data'))}  ·  "
+            f"🕒 {horario}  ·  "
+            f"{icones_status.get(status, '⚪')} {status}"
         ):
             _mostrar_reserva(
                 reserva,
