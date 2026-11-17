@@ -1,7 +1,7 @@
 [README.md](https://github.com/user-attachments/files/34821517/README.md)
 # Sistema de Reserva de Salas
 
-Projeto acadêmico da equipe **As Branquelas**, desenvolvido na disciplina de **Programação Web**, para consultar espaços, acompanhar reservas e gerenciar salas e contas.
+Projeto acadêmico da equipe **As Branquelas**, desenvolvido na disciplina de **Engenharia de Software**, para consultar espaços, acompanhar reservas e gerenciar salas e contas.
 
 > **2ª etapa — documentação revisada em 13/11/2026:** a autenticação utiliza Firebase Authentication, e usuários e salas são armazenados no Cloud Firestore. As reservas e os favoritos ainda ficam na sessão do Streamlit. Esta documentação descreve o código da `main` após o [PR #7](https://github.com/MarcosYnn/reserva_salas_asbranquelas/pull/7), na base [bdab79c](https://github.com/MarcosYnn/reserva_salas_asbranquelas/commit/bdab79c116145d20d05cb9ee54897403997fc4f8). Não comprova a configuração nem o funcionamento do ambiente publicado.
 
