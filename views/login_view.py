@@ -207,7 +207,8 @@ def pagina_login():
             unsafe_allow_html=True,
         )
 
-        with st.form("form_login_moderno"):
+        with st.form("form_login_moderno", clear_on_submit=False):
+
             login_input = st.text_input(
                 "Usuário",
                 placeholder="Digite seu usuário",

@@ -161,19 +161,26 @@ def listar_salas():
     return salas
 
 
-def excluir_sala(id_sala):
-    """Exclui uma sala pelo ID."""
+def excluir_sala(id_sala, proprietario):
+    """Exclui uma sala somente se pertencer ao proprietário."""
 
     conexao = conectar()
     cursor = conexao.cursor()
 
     cursor.execute(
-        "DELETE FROM salas WHERE id = ?",
-        (id_sala,)
+        """
+        DELETE FROM salas
+        WHERE id = ? AND proprietario = ?
+        """,
+        (id_sala, proprietario)
     )
+
+    excluiu = cursor.rowcount > 0
 
     conexao.commit()
     conexao.close()
+
+    return excluiu
 
 
 def contar_salas():

@@ -114,10 +114,14 @@ def adicionar_sala(nome, capacidade, localizacao, proprietario, recursos_marcado
     recarregar_salas()
 
 
-def excluir_sala(sala_id):
-    db.excluir_sala(sala_id)
-    st.session_state.donos_salas.pop(sala_id, None)
-    recarregar_salas()
+def excluir_sala(sala_id, proprietario):
+    excluiu = db.excluir_sala(sala_id, proprietario)
+
+    if excluiu:
+        st.session_state.donos_salas.pop(sala_id, None)
+        recarregar_salas()
+
+    return excluiu
 
 
 def sala_por_id(sala_id):

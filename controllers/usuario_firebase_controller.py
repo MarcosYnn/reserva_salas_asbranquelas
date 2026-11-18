@@ -78,11 +78,24 @@ def listar_usuarios_admin(usuario_atual):
     return model.listar_usuarios()
 
 
-def criar_usuario_admin(usuario_atual, nome, email, perfil, status="ativo"):
+def criar_usuario_admin(
+    usuario_atual,
+    nome,
+    email,
+    perfil,
+    status="ativo",
+    dados_adicionais=None,
+    senha=None,
+):
     _exigir_admin(usuario_atual)
-    dados = _validar_dados(nome, email, perfil, status)
-    return model.criar_usuario(*dados)
 
+    dados = _validar_dados(nome, email, perfil, status)
+
+    return model.criar_usuario(
+        *dados,
+        dados_adicionais=dados_adicionais,
+        senha=senha,
+    )
 
 def atualizar_usuario_admin(
     usuario_atual, uid, nome, email, perfil, status

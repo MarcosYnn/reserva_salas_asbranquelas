@@ -1,4 +1,7 @@
+import email
+
 from firebase_admin import auth
+from streamlit import status
 
 from models.firebase_client import obter_app_firebase, obter_firestore
 
@@ -45,28 +48,56 @@ def _validar_campos(nome, email, perfil, status):
 
     return nome, email, perfil, status
 
-
-def criar_usuario(nome, email, perfil, status="ativo"):
+def criar_usuario(
+    nome,
+    email,
+    perfil,
+    status="ativo",
+    dados_adicionais=None,
+    senha=None,
+):
     nome, email, perfil, status = _validar_campos(
         nome, email, perfil, status
     )
+
     app = obter_app_firebase()
     db = obter_firestore()
 
+    if not isinstance(senha, str) or len(senha) < 6:
+        raise ValueError(
+            "A senha provisória deve ter pelo menos 6 caracteres."
+        )
+
     conta = auth.create_user(
         email=email,
+        password=senha,
         display_name=nome,
         disabled=(status == "inativo"),
         app=app,
     )
-
+    
     dados = {
         "nome": nome,
         "email": email,
         "perfil": perfil,
         "status": status,
     }
+    if dados_adicionais:
+        campos_permitidos = {
+            "cpf",
+            "telefone",
+            "nascimento",
+            "usuario",
+            "departamento",
+            "cargo",
+        }
 
+        dados.update({
+            chave: valor
+            for chave, valor in dados_adicionais.items()
+            if chave in campos_permitidos
+        })
+        
     try:
         db.collection(COLECAO_USUARIOS).document(conta.uid).set(dados)
     except Exception:

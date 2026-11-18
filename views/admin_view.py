@@ -108,6 +108,14 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
             st.error("Usuário não encontrado. Faça login novamente.")
 
         return
+    if pagina == "Administração":
+        from views.admin_cadastro_figma import renderizar_cadastro_figma
+        usuario = st.session_state.get("usuario")
+        if not usuario:
+            st.error("Faça login novamente.")
+        else:
+            renderizar_cadastro_figma(usuario)
+        return
     if pagina != "Início":
         
         
