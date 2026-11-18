@@ -222,8 +222,13 @@ def renderizar_reservas(usuario, mostrar_titulo=True):
                     reserva_model.APROVADA,
                 }
             ):
+                rotulo_cancelar = (
+                    "Cancelar pedido"
+                    if status == reserva_model.PENDENTE
+                    else "Cancelar reserva"
+                )
                 if st.button(
-                    "Cancelar meu pedido",
+                    rotulo_cancelar,
                     key=f"cancelar_locatario_{reserva_id}",
                 ):
                     _cancelar_e_atualizar(usuario, reserva_id)

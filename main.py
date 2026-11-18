@@ -33,6 +33,7 @@ from utils.estado import (
     salas_de,
 )
 from views.admin_view import renderizar_admin_usuarios
+from views.calendario_locatario_view import renderizar_calendario_locatario
 from views.reserva_view import renderizar_reservas
 
 
@@ -125,15 +126,6 @@ def pagina_dashboard_locatario(usuario):
                 "—",
                 "Nenhuma agendada",
             )
-
-    st.markdown(
-        '<div class="dashboard-section-title">'
-        "Status das minhas reservas</div>"
-        '<div class="dashboard-section-caption">'
-        "Acompanhe os pedidos e os horários confirmados.</div>",
-        unsafe_allow_html=True,
-    )
-    renderizar_reservas(usuario, mostrar_titulo=False)
 
 
 def pagina_buscar_salas(usuario):
@@ -770,6 +762,7 @@ PAGINAS_LOCATARIO = {
     "Dashboard": pagina_dashboard_locatario,
     "Buscar Salas": pagina_buscar_salas,
     "Minhas Reservas": pagina_minhas_reservas,
+    "Calendário": renderizar_calendario_locatario,
     "Favoritos": pagina_favoritos,
     "Perfil": pagina_perfil,
 }
