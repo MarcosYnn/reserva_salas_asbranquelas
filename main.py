@@ -2,6 +2,7 @@
 import streamlit as st
 
 from views.admin_view import mostrar_admin
+from views.calendario_locatario_view import renderizar_calendario_locatario
 
 from utils.estado import (
     sala_por_id,
@@ -489,6 +490,7 @@ PAGINAS_LOCATARIO = {
     "Dashboard": pagina_dashboard_locatario,
     "Buscar Salas": pagina_buscar_salas,
     "Minhas Reservas": pagina_minhas_reservas,
+    "📅 Calendário": renderizar_calendario_locatario,
     "Favoritos": pagina_favoritos,
     "Perfil": pagina_perfil,
 }

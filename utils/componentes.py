@@ -75,7 +75,7 @@ div.st-key-menu_configuracoes button p {
            background-color: #f3f6fb !important;
             color: #15182f !important;
         }
-
+    
         .block-container {
             padding-top: 2rem;
             padding-bottom: 2rem;

@@ -161,6 +161,28 @@ paginas = main.menu_para(usuario["tipo"])
 
 
 # ==========================================
+# MENU LATERAL
+# ==========================================
+
+with st.sidebar:
+    st.title("🏢 Escritório Virtual")
+
+    st.write(f"Olá, {usuario['nome']}!")
+
+    pagina_selecionada = st.radio(
+        "Navegação",
+        paginas,
+        index=(
+            paginas.index(st.session_state.pagina_atual)
+            if st.session_state.get("pagina_atual") in paginas
+            else 0
+        ),
+        key="menu_lateral",
+    )
+
+    st.session_state.pagina_atual = pagina_selecionada
+
+# ==========================================
 # PÁGINA INICIAL POR PERFIL
 # ==========================================
 
