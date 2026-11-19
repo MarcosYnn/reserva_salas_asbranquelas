@@ -118,7 +118,11 @@ def autenticar_usuario_firebase(usuario, senha):
 
     try:
         app = obter_app_firebase()
-        token_verificado = firebase_auth.verify_id_token(token, app=app)
+        token_verificado = firebase_auth.verify_id_token(
+            token,
+            app=app,
+            clock_skew_seconds=5,
+        )
 
         if token_verificado.get("uid") != uid:
             return False, "O UID do token não corresponde à conta."

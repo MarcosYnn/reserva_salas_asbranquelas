@@ -107,6 +107,7 @@ def criar_usuario_admin(
     perfil,
     status="ativo",
     usuario=None,
+    dados_adicionais=None,
 ):
     _exigir_admin(usuario_atual)
     usuario, nome, email, perfil, status = _validar_dados(
@@ -116,7 +117,6 @@ def criar_usuario_admin(
         perfil,
         status,
     )
-
     senha_ok, mensagem = validar_senha_forte(senha)
     if not senha_ok:
         raise ValueError(mensagem)
@@ -130,6 +130,7 @@ def criar_usuario_admin(
         perfil,
         status,
         senha,
+        dados_adicionais=dados_adicionais,
     )
 
 

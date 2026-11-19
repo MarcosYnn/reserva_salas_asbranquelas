@@ -101,6 +101,7 @@ def criar_usuario(
     perfil,
     status="ativo",
     senha=None,
+    dados_adicionais=None,
 ):
     usuario, nome, email, perfil, status = _validar_campos(
         usuario,
@@ -126,13 +127,16 @@ def criar_usuario(
         app=app,
     )
 
-    dados = {
-        "usuario": usuario,
-        "nome": nome,
-        "email": email,
-        "perfil": perfil,
-        "status": status,
-    }
+    dados = dict(dados_adicionais or {})
+    dados.update(
+        {
+            "usuario": usuario,
+            "nome": nome,
+            "email": email,
+            "perfil": perfil,
+            "status": status,
+        }
+    )
 
     try:
         db.collection(COLECAO_USUARIOS).document(conta.uid).set(dados)
