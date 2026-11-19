@@ -35,6 +35,7 @@ from utils.estado import (
 )
 
 from views.calendario_locatario_view import renderizar_calendario_locatario
+from views.mapa_campus_view import pagina_mapa_campus
 from views.reserva_view import renderizar_reservas
 
 
@@ -862,6 +863,7 @@ def pagina_admin(usuario):
 # ==========================================
 
 PAGINAS_LOCATARIO = {
+    "Mapa do Campus": pagina_mapa_campus,
     "Dashboard": pagina_dashboard_locatario,
     "Buscar Salas": pagina_buscar_salas,
     "Minhas Reservas": pagina_minhas_reservas,

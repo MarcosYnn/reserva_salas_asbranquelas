@@ -126,6 +126,15 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
         else:
             st.error("Usuário não encontrado. Faça login novamente.")
         return
+    if pagina == "Mapa":
+        from views.mapa_campus_view import pagina_mapa_campus
+
+        usuario = st.session_state.get("usuario")
+        if usuario:
+            pagina_mapa_campus(usuario)
+        else:
+            st.error("Usuário não encontrado. Faça login novamente.")
+        return
     if pagina == "Administração":
         usuario = st.session_state.get("usuario")
         if not usuario:

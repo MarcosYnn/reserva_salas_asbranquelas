@@ -52,6 +52,7 @@ if not paginas:
 
 rotulos = {
     "Dashboard": "Início",
+    "Mapa do Campus": "Mapa",
     "Buscar Salas": "Buscar salas",
     "Minhas Reservas": "Minhas reservas",
     "Calendário": "Calendário de reservas",
@@ -64,6 +65,7 @@ rotulos = {
 
 icones = {
     "Dashboard": "⌂",
+    "Mapa do Campus": "⌖",
     "Buscar Salas": "▦",
     "Minhas Reservas": "▣",
     "Calendário": "▦",
