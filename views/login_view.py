@@ -222,7 +222,22 @@ def pagina_login():
             if sucesso:
                 st.rerun()
             else:
-                st.error(mensagem)
+                st.markdown(
+    f"""
+    <div style="
+        background-color: #202b3b;
+        border: 1px solid #713b45;
+        border-radius: 8px;
+        padding: 14px;
+        color: white;
+        font-weight: 600;
+    ">
+        <span style="color: #ff7777;">⚠</span>
+        {mensagem}
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
         st.caption(
             "Entre com o usuário e a senha cadastrados pelo administrador."
