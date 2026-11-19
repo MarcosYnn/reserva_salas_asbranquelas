@@ -5,3 +5,15 @@ __pycache__/
 .venv/
 
 *.db
+
+.streamlit/secrets.toml
+
+.venv*/
+.streamlit/secrets.toml
+secrets.toml
+.env
+__pycache__/
+*.py[cod]
+definir_senha_firebase.py
+solicitar_reset_firebase.py
+verificar_firebase.py
