@@ -1,16 +1,12 @@
-
 import calendar
-from datetime import date, datetime
+from datetime import date
 
 import streamlit as st
 
 from controllers.autorizacao_controller import exigir_tipo
-from utils.estado import (
-    reservas_de,
-    MAPA_RECURSOS,
-    TIPO_LOCATARIO,
-    sala_por_id,
-)
+from controllers.reserva_controller import listar_reservas_usuario
+from models import reserva_firebase_model as reserva_model
+from utils.estado import MAPA_RECURSOS, TIPO_LOCATARIO, sala_por_id
 
 
 MESES = (
@@ -34,206 +30,87 @@ DIAS_SEMANA = ("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom")
 def renderizar_calendario_locatario(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
 
-    # ==========================================
-    # CABEÇALHO
-    # ==========================================
-
-    st.title("📅 Calendário de Reservas")
-
     st.markdown(
-        "Visualize suas reservas organizadas por dia "
-        "e acompanhe o status de cada pedido."
+        '<div class="page-intro">'
+        "Visualize suas reservas organizadas por dia e acompanhe o status de cada pedido."
+        "</div>",
+        unsafe_allow_html=True,
     )
 
-    st.divider()
-
-    # ==========================================
-    # CONTROLE DO MÊS
-    # ==========================================
-
     chave_mes = "calendario_locatario_mes"
-
     if chave_mes not in st.session_state:
         hoje = date.today()
-        st.session_state[chave_mes] = date(
-            hoje.year, hoje.month, 1
-        )
+        st.session_state[chave_mes] = date(hoje.year, hoje.month, 1)
 
     mes_atual = st.session_state[chave_mes]
-
-    col_anterior, col_titulo, col_proximo, col_hoje = st.columns(
-    [1.5, 3, 1.5, 1],
-    gap="small",
-    vertical_alignment="center",
-)
+    col_anterior, col_titulo, col_proximo = st.columns([1, 5, 1])
 
     with col_anterior:
-        if st.button(
-            "‹ Anterior",
-            key="calendario_locatario_anterior",
-        ):
+        if st.button("‹ Anterior", key="calendario_locatario_anterior"):
             ano = mes_atual.year
             mes = mes_atual.month - 1
-
             if mes == 0:
                 ano -= 1
                 mes = 12
-
             st.session_state[chave_mes] = date(ano, mes, 1)
             st.rerun()
 
     with col_titulo:
         st.markdown(
             f"<h3 style='text-align:center; margin:0.35rem 0;'>"
-            f"{MESES[mes_atual.month - 1].capitalize()} "
-            f"de {mes_atual.year}"
+            f"{MESES[mes_atual.month - 1].capitalize()} de {mes_atual.year}"
             "</h3>",
             unsafe_allow_html=True,
         )
 
     with col_proximo:
-        if st.button(
-            "Próximo ›",
-            key="calendario_locatario_proximo",
-        ):
+        if st.button("Próximo ›", key="calendario_locatario_proximo"):
             ano = mes_atual.year
             mes = mes_atual.month + 1
-
             if mes == 13:
                 ano += 1
                 mes = 1
-
             st.session_state[chave_mes] = date(ano, mes, 1)
             st.rerun()
 
-    with col_hoje:
-        if st.button(
-            "Hoje",
-            key="calendario_locatario_hoje",
-            use_container_width=True,
-        ):
-            hoje = date.today()
-            st.session_state[chave_mes] = date(
-                hoje.year, hoje.month, 1
-            )
-            st.rerun()
-
-    # ==========================================
-    # BUSCAR RESERVAS DO USUÁRIO
-    # ==========================================
-
     try:
-        reservas = reservas_de(usuario["nome"])
+        reservas = listar_reservas_usuario(usuario)
     except Exception as erro:
-        st.error(
-            f"Não foi possível carregar suas reservas: {erro}"
-        )
+        st.error(f"Não foi possível carregar suas reservas: {erro}")
         return
 
-    # Mostrar somente reservas confirmadas
+    # Neste calendário, somente pedidos confirmados aparecem como eventos.
     reservas_confirmadas = [
         reserva
         for reserva in reservas
-        if reserva.get("status") == "Confirmada"
+        if reserva.get("status") == reserva_model.APROVADA
     ]
 
-    # ==========================================
-    # ORGANIZAR RESERVAS POR DATA
-    # ==========================================
-
     reservas_por_data = {}
-
     for reserva in reservas_confirmadas:
         data_reserva = reserva.get("data")
-
-        if not data_reserva:
-            continue
-
-        try:
-            data_formatada = datetime.strptime(
-                data_reserva, "%d/%m/%Y"
-            ).date().isoformat()
-
-        except (ValueError, TypeError):
-            continue
-
-        reservas_por_data.setdefault(
-            data_formatada, []
-        ).append(reserva)
+        if data_reserva:
+            reservas_por_data.setdefault(data_reserva, []).append(reserva)
 
     for lista in reservas_por_data.values():
-        lista.sort(
-            key=lambda item: item.get("horario", "")
-        )
+        lista.sort(key=lambda item: item.get("hora_inicio", ""))
 
-    st.caption(
-        "O calendário mostra apenas reservas "
-        "aprovadas/confirmadas."
-    )
+    st.caption("O calendário mostra apenas reservas aprovadas/confirmadas.")
+    st.markdown("🟢 Reserva confirmada")
 
-    st.markdown(
-    """
-    <div style="
-        display: inline-block;
-        background-color: #DCFCE7;
-        color: #166534;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 600;
-        margin-bottom: 15px;
-    ">
-        ✓ Reserva confirmada
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+    cabecalho = st.columns(7)
+    for coluna, nome_dia in zip(cabecalho, DIAS_SEMANA):
+        coluna.markdown(f"**{nome_dia}**")
 
-    # ==========================================
-    # CABEÇALHO DOS DIAS DA SEMANA
-    # ==========================================
-
-    cabecalho = st.columns(7, gap="small")
-
-    for coluna, nome_dia in zip(
-        cabecalho, DIAS_SEMANA
-    ):
-        with coluna:
-            st.markdown(
-                "<p style='text-align:center; "
-                "font-weight:600;'>"
-                f"{nome_dia}</p>",
-                unsafe_allow_html=True,
-            )
-
-    # ==========================================
-    # GERAR CALENDÁRIO
-    # ==========================================
-
-    calendario_mes = calendar.Calendar(
-        firstweekday=0
-    )
-
-    semanas = calendario_mes.monthdayscalendar(
-        mes_atual.year,
-        mes_atual.month,
-    )
-
-    hoje = date.today()
+    calendario_mes = calendar.Calendar(firstweekday=0)
+    semanas = calendario_mes.monthdayscalendar(mes_atual.year, mes_atual.month)
 
     for semana in semanas:
-        colunas = st.columns(7, gap="small")
-
-        for coluna, numero_dia in zip(
-            colunas, semana
-        ):
+        colunas = st.columns(7)
+        for coluna, numero_dia in zip(colunas, semana):
             with coluna:
-
                 if numero_dia == 0:
-                    st.markdown(
-                        "&nbsp;",
-                        unsafe_allow_html=True,
-                    )
+                    st.markdown("&nbsp;", unsafe_allow_html=True)
                     continue
 
                 data_iso = date(
@@ -242,166 +119,58 @@ def renderizar_calendario_locatario(usuario):
                     numero_dia,
                 ).isoformat()
 
-                # ==================================
-                # QUADRADO DO DIA
-                # ==================================
+                with st.container(border=True):
+                    st.markdown(f"**{numero_dia}**")
 
-                with st.container(
-                    border=True,
-                    height=110,
-                ):
-
-                    # Verificar se é o dia atual
-                    eh_hoje = (
-                        mes_atual.year == hoje.year
-                        and mes_atual.month == hoje.month
-                        and numero_dia == hoje.day
-                    )
-
-                    estilo_dia = (
-                        "font-size:16px; "
-                        "font-weight:700; "
-                        "margin-bottom:8px; "
-                        "text-align:center;"
-                    )
-
-                    if eh_hoje:
-                        estilo_dia += (
-                            "background-color:#DBEAFE; "
-                            "color:#1D4ED8; "
-                            "border-radius:8px; "
-                            "padding:5px;"
-                        )
-
-                    st.markdown(
-                        f"<div style='{estilo_dia}'>"
-                        f"{numero_dia}</div>",
-                        unsafe_allow_html=True,
-                    )
-
-                    # ==================================
-                    # RESERVAS DO DIA
-                    # ==================================
-
-                    eventos = reservas_por_data.get(
-                        data_iso, []
-                    )
-
+                    eventos = reservas_por_data.get(data_iso, [])
                     if not eventos:
+                        st.caption("—")
                         continue
 
                     for reserva in eventos:
-
-                        horario = reserva.get(
-                            "horario",
-                            "Horário não informado",
+                        horario = (
+                            f"{reserva.get('hora_inicio', '—')}–"
+                            f"{reserva.get('hora_fim', '—')}"
                         )
-
-                        # Buscar detalhes da sala
-                        try:
-                            detalhes_sala = sala_por_id(
-                                reserva.get("sala_id")
-                            )
-
-                            sala = detalhes_sala.get(
-                                "nome", "Sala"
-                            )
-
-                        except (
-                            StopIteration,
-                            ValueError,
-                            TypeError,
-                            KeyError,
-                        ):
-                            detalhes_sala = None
-                            sala = "Sala não encontrada"
-
-                        st.markdown(
-    f"""
-    <div style="
-        background-color: #DCFCE7;
-        color: #166534;
-        border-radius: 6px;
-        padding: 5px;
-        font-size: 12px;
-        font-weight: 600;
-        text-align: center;
-        margin-bottom: 5px;
-    ">
-        ✓ {horario}
-<div style="font-size:11px; margin-top:3px;">
-    {sala}
-</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-                        # ==================================
-                        # DETALHES DA RESERVA
-                        # ==================================
+                        sala = reserva.get("sala_nome", "Sala")
+                        st.caption(f"🟢 {horario}")
 
                         with st.expander(
                             f"🏢 {sala} · Ver detalhes",
                             expanded=False,
                         ):
+                            st.write(f"**Horário:** {horario}")
+                            st.write("**Status:** Confirmada")
 
-                            st.write(
-                                f"**Horário:** {horario}"
-                            )
-
-                            st.write(
-                                "**Status:** Confirmada"
-                            )
+                            try:
+                                detalhes_sala = sala_por_id(
+                                    reserva.get("sala_id")
+                                )
+                            except (ValueError, TypeError):
+                                detalhes_sala = None
 
                             if detalhes_sala:
-
                                 st.write(
                                     "**Capacidade:** "
-                                    f"{detalhes_sala.get('capacidade', '—')} "
-                                    "pessoas"
+                                    f"{detalhes_sala.get('capacidade', '—')} pessoas"
                                 )
-
-                                localizacao = (
-                                    detalhes_sala.get("andar")
-                                    or detalhes_sala.get("localizacao")
-                                    or "Não informada"
-                                )
-
                                 st.write(
                                     "**Localização:** "
-                                    f"{localizacao}"
+                                    f"{detalhes_sala.get('andar') or detalhes_sala.get('localizacao') or 'Não informada'}"
                                 )
-
                                 recursos = [
                                     rotulo
-                                    for chave, rotulo
-                                    in MAPA_RECURSOS
+                                    for chave, rotulo in MAPA_RECURSOS
                                     if detalhes_sala.get(chave)
                                 ]
-
                                 st.write(
                                     "**Recursos:** "
-                                    + (
-                                        ", ".join(recursos)
-                                        if recursos
-                                        else "Nenhum informado"
-                                    )
+                                    + (", ".join(recursos) if recursos else "Nenhum informado")
                                 )
-
                             else:
                                 st.caption(
-                                    "Os detalhes completos "
-                                    "desta sala não estão "
-                                    "disponíveis."
+                                    "Os detalhes completos desta sala não estão disponíveis."
                                 )
 
-    # ==========================================
-    # MENSAGEM SEM RESERVAS
-    # ==========================================
-
     if not reservas_confirmadas:
-        st.info(
-            "Você ainda não tem reservas "
-            "confirmadas neste calendário."
-        )
+        st.info("Você ainda não tem reservas confirmadas neste calendário.")

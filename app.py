@@ -1,28 +1,25 @@
-﻿
+from datetime import date
+from html import escape
+
 import streamlit as st
 
 try:
-    from importlib import import_module
+    from dotenv import load_dotenv
 
-    load_dotenv = import_module("dotenv").load_dotenv
     load_dotenv()
 except ImportError:
     pass
 
 from utils.estado import (
-    inicializar_estado,
-    usuario_logado,
     fazer_logout,
-    confirmar_email_via_token,
-    redefinir_senha_via_token,
+    inicializar_estado,
+    recarregar_salas,
+    usuario_logado,
 )
-from utils.componentes import injetar_css
+from utils.componentes import injetar_css, renderizar_cabecalho_pagina
 from views.login_view import pagina_login
+import main
 
-
-# ==========================================
-# CONFIGURAÇÃO DA PÁGINA
-# ==========================================
 
 st.set_page_config(
     page_title="Reserva de Salas",
@@ -33,178 +30,110 @@ st.set_page_config(
 
 injetar_css()
 inicializar_estado()
-
-
-# ==========================================
-# LINKS RECEBIDOS POR E-MAIL
-# ==========================================
-
-parametros = st.query_params
-
-token_confirmacao = parametros.get("confirmar")
-token_redefinicao = parametros.get("redefinir")
-
-
-# ==========================================
-# CONFIRMAÇÃO DE E-MAIL
-# ==========================================
-
-if token_confirmacao:
-
-    sucesso, mensagem = confirmar_email_via_token(
-        token_confirmacao
-    )
-
-    st.query_params.clear()
-
-    if sucesso:
-        st.success(mensagem)
-    else:
-        st.error(mensagem)
-
-    st.info(
-        "Você já pode acessar sua conta na aba Entrar."
-    )
-
-    st.stop()
-
-
-# ==========================================
-# REDEFINIÇÃO DE SENHA
-# ==========================================
-
-if token_redefinicao:
-
-    st.markdown(
-        '<div class="titulo">🔑 Redefinir senha</div>',
-        unsafe_allow_html=True,
-    )
-
-    with st.form("form_redefinir_senha"):
-
-        nova_senha = st.text_input(
-            "Nova senha",
-            type="password",
-        )
-
-        confirmar_nova_senha = st.text_input(
-            "Confirme a nova senha",
-            type="password",
-        )
-
-        st.caption(
-            "A senha deve ter 8+ caracteres, "
-            "com maiúscula, minúscula e número."
-        )
-
-        redefinir = st.form_submit_button(
-            "Redefinir senha",
-            type="primary",
-        )
-
-    if redefinir:
-
-        sucesso, mensagem = redefinir_senha_via_token(
-            token_redefinicao,
-            nova_senha,
-            confirmar_nova_senha,
-        )
-
-        if sucesso:
-
-            st.query_params.clear()
-
-            st.success(mensagem)
-
-            st.info(
-                "Sua senha foi redefinida. "
-                "Volte à página inicial para entrar."
-            )
-
-        else:
-            st.error(mensagem)
-
-    st.stop()
-
-
-# ==========================================
-# VERIFICAR USUÁRIO LOGADO
-# ==========================================
+recarregar_salas()
 
 usuario = usuario_logado()
 
-
-# ==========================================
-# GATE DE LOGIN
-# ==========================================
-
 if usuario is None:
-
     pagina_login()
-
     st.stop()
 
 
-# ==========================================
-# CARREGAR SISTEMA PRINCIPAL
-# Somente depois do login
-# ==========================================
+# O administrador usa o painel e a navegação próprios.
+if usuario["tipo"] == main.TIPO_ADMIN:
+    main.render_pagina("Administração", usuario)
+    st.stop()
 
-import main
-
-
-# ==========================================
-# NAVEGAÇÃO
-# ==========================================
 
 paginas = main.menu_para(usuario["tipo"])
+if not paginas:
+    st.error("Este perfil não possui páginas disponíveis.")
+    st.stop()
 
+rotulos = {
+    "Dashboard": "Início",
+    "Buscar Salas": "Buscar salas",
+    "Minhas Reservas": "Minhas reservas",
+    "Calendário": "Calendário de reservas",
+    "Favoritos": "Favoritos",
+    "Minhas Salas": "Minhas salas",
+    "Pedidos de Reserva": "Pedidos de reserva",
+    "Perfil": "Perfil",
+    "Administração": "Administração",
+}
 
-# ==========================================
-# MENU LATERAL
-# ==========================================
+icones = {
+    "Dashboard": "⌂",
+    "Buscar Salas": "▦",
+    "Minhas Reservas": "▣",
+    "Calendário": "▦",
+    "Favoritos": "♡",
+    "Minhas Salas": "▦",
+    "Pedidos de Reserva": "◷",
+    "Perfil": "◉",
+    "Administração": "⚙",
+}
+
+if st.session_state.get("pagina_atual") not in paginas:
+    st.session_state.pagina_atual = paginas[0]
 
 with st.sidebar:
-    st.title("🏢 Escritório Virtual")
-
-    st.write(f"Olá, {usuario['nome']}!")
-
-    pagina_selecionada = st.radio(
-        "Navegação",
-        paginas,
-        index=(
-            paginas.index(st.session_state.pagina_atual)
-            if st.session_state.get("pagina_atual") in paginas
-            else 0
-        ),
-        key="menu_lateral",
+    st.markdown(
+        '<div class="app-brand">▦ &nbsp; Reserva de Salas'
+        '<small>Sistema Acadêmico</small></div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="app-menu-label">Menu</div>',
+        unsafe_allow_html=True,
     )
 
-    st.session_state.pagina_atual = pagina_selecionada
+    for chave_pagina in paginas:
+        texto = (
+            f"{icones.get(chave_pagina, '•')}   "
+            f"{rotulos.get(chave_pagina, chave_pagina)}"
+        )
+        ativo = st.session_state.pagina_atual == chave_pagina
 
-# ==========================================
-# PÁGINA INICIAL POR PERFIL
-# ==========================================
+        if st.button(
+            texto,
+            key=f"nav_{chave_pagina}",
+            type="primary" if ativo else "secondary",
+            use_container_width=True,
+        ):
+            st.session_state.pagina_atual = chave_pagina
+            st.rerun()
 
-if "pagina_atual" not in st.session_state:
+    st.markdown('<div style="height: 1.5rem"></div>', unsafe_allow_html=True)
 
-    if usuario["tipo"] == main.TIPO_ADMIN:
+    nome_usuario = str(usuario.get("nome") or "Usuário")
+    tipo_usuario = str(usuario.get("tipo") or "Conta")
 
-        st.session_state.pagina_atual = " Administração"
+    st.markdown(
+        '<div class="app-user">'
+        f'{escape(nome_usuario)}'
+        f'<small>Conta de {escape(tipo_usuario)}</small>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
-    else:
-
-        st.session_state.pagina_atual = paginas[0]
+    if st.button("↪   Sair", key="sair_app", use_container_width=True):
+        fazer_logout()
+        st.rerun()
 
 
 pagina = st.session_state.pagina_atual
+rotulo_pagina = rotulos.get(pagina, pagina)
 
-
-# ==========================================
-# CONTEÚDO PRINCIPAL
-# ==========================================
-
-main.render_pagina(
-    pagina,
-    usuario,
+data_atual = date.today()
+meses = (
+    "jan", "fev", "mar", "abr", "mai", "jun",
+    "jul", "ago", "set", "out", "nov", "dez",
 )
+subtitulo = (
+    f"{data_atual.day} {meses[data_atual.month - 1]} "
+    f"{data_atual.year} · Sistema Acadêmico"
+)
+
+renderizar_cabecalho_pagina(rotulo_pagina, subtitulo)
+main.render_pagina(pagina, usuario)

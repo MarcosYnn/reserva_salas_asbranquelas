@@ -74,21 +74,27 @@ def renderizar_cadastro_figma(usuario):
             else:
                 try:
                     criar_usuario_admin(
-    usuario,
-    nome,
-    email,
-    perfil,
-    "ativo",
-    dados_adicionais={
-        "cpf": re.sub(r"\D", "", cpf),
-        "telefone": telefone,
-        "nascimento": nascimento.isoformat() if hasattr(nascimento, "isoformat") else str(nascimento),
-        "usuario": login.strip().lower(),
-        "departamento": departamento,
-        "cargo": cargo,
-    },
-    senha=senha,
-)
+                        usuario,
+                        nome,
+                        email,
+                        senha,
+                        confirma,
+                        perfil,
+                        status="ativo",
+                        usuario=login.strip().lower(),
+                        dados_adicionais={
+                            "cpf": re.sub(r"\D", "", cpf),
+                            "telefone": telefone.strip(),
+                            "nascimento": (
+                                nascimento.isoformat()
+                                if hasattr(nascimento, "isoformat")
+                                else str(nascimento)
+                            ),
+                            "departamento": departamento,
+                            "cargo": cargo,
+                            "unidade": unidade,
+                        },
+                    )
                    
                     st.success("Usuário cadastrado com sucesso no Firebase!")
                 except Exception as erro:
