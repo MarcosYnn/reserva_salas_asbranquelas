@@ -1,3 +1,4 @@
+from utils.relogio import hoje_local
 from datetime import date
 from html import escape
 
@@ -38,6 +39,25 @@ if usuario is None:
     pagina_login()
     st.stop()
 
+
+from controllers.sessao_controller import revalidar_usuario
+
+try:
+    usuario = revalidar_usuario(usuario)
+except PermissionError as erro:
+    fazer_logout()
+    st.error(str(erro))
+    pagina_login()
+    st.stop()
+
+if usuario["tipo"] == main.TIPO_LOCATARIO:
+    from controllers.favorito_controller import listar_favoritos
+    try:
+        st.session_state.favoritos = listar_favoritos(usuario)
+    except Exception:
+        # Não exibir favoritos de uma conta anterior ou fingir uma lista vazia.
+        st.error("Não foi possível carregar seus favoritos. Atualize a página.")
+        st.stop()
 
 # O administrador usa o painel e a navegação próprios.
 if usuario["tipo"] == main.TIPO_ADMIN:
@@ -127,7 +147,7 @@ with st.sidebar:
 pagina = st.session_state.pagina_atual
 rotulo_pagina = rotulos.get(pagina, pagina)
 
-data_atual = date.today()
+data_atual = hoje_local()
 meses = (
     "jan", "fev", "mar", "abr", "mai", "jun",
     "jul", "ago", "set", "out", "nov", "dez",
@@ -139,3 +159,4 @@ subtitulo = (
 
 renderizar_cabecalho_pagina(rotulo_pagina, subtitulo)
 main.render_pagina(pagina, usuario)
+

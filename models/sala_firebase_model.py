@@ -1,5 +1,8 @@
 from uuid import uuid4
 
+from google.cloud import firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
+
 from models.firebase_client import obter_firestore
 
 
@@ -190,13 +193,21 @@ def atualizar_sala(
 
 
 def excluir_sala(sala_id):
-    referencia = (
-        obter_firestore()
-        .collection(COLECAO_SALAS)
-        .document(str(sala_id))
-    )
+    db = obter_firestore()
+    referencia = db.collection(COLECAO_SALAS).document(str(sala_id))
 
-    if not referencia.get().exists:
-        raise ValueError("Sala não encontrada no Firestore.")
+    @firestore.transactional
+    def _excluir(transaction):
+        if not referencia.get(transaction=transaction).exists:
+            raise ValueError("Sala não encontrada no Firestore.")
+        consulta = db.collection("reservas").where(
+            filter=FieldFilter("sala_id", "==", str(sala_id))
+        )
+        if any(
+            documento.to_dict().get("status") in {"Pendente", "Aprovada"}
+            for documento in transaction.get(consulta)
+        ):
+            raise ValueError("Não é possível excluir uma sala com pedidos pendentes ou aprovados.")
+        transaction.delete(referencia)
 
-    referencia.delete()
+    _excluir(db.transaction())

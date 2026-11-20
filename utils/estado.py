@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 
 from models import sala_firebase_model as sala_model
 from models import usuario_firebase_model as usuario_model
@@ -133,11 +133,16 @@ def fazer_login(email, senha):
 
 
 def fazer_logout():
-    st.session_state.usuario = None
+    from utils.sessao import limpar_dados_usuario
+
+    limpar_dados_usuario()
 
 
 def _exigir_admin_atual():
     usuario = usuario_logado()
+    from controllers.sessao_controller import revalidar_usuario
+
+    revalidar_usuario(usuario)
     if not usuario or usuario.get("tipo") != TIPO_ADMIN:
         raise PermissionError(
             "Apenas um administrador pode gerenciar usuários."

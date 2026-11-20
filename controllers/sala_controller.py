@@ -32,6 +32,9 @@ def _buscar_sala(sala_id):
 
 
 def _exigir_dono_da_sala(usuario, sala):
+    from controllers.sessao_controller import revalidar_usuario
+
+    revalidar_usuario(usuario)
     if not usuario:
         raise PermissionError("É necessário estar autenticado.")
 
@@ -42,6 +45,9 @@ def _exigir_dono_da_sala(usuario, sala):
         raise PermissionError(
             "Seu perfil não pode gerenciar salas."
         )
+
+    if usuario.get("tipo") == TIPO_ADMIN:
+        return
 
     login = _login_usuario(usuario)
     proprietario = (
