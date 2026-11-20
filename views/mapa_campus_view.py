@@ -245,6 +245,10 @@ def desenhar_rota(imagem, rota, posicao_atual=None):
 # ==========================================
 
 def pagina_mapa_campus(usuario):
+    from controllers.autorizacao_controller import exigir_tipo
+
+    exigir_tipo(usuario, ["Locatário", "Proprietário", "Administrador"])
+
 
     st.markdown(
         """
@@ -598,3 +602,4 @@ def pagina_mapa_campus(usuario):
         "Os trajetos ainda precisam ser conferidos "
         "com os caminhos reais do campus."
     )
+

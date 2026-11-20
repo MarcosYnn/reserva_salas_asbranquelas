@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 
 from html import escape
 
@@ -470,97 +470,77 @@ def render_lista_reservas(
                 st.warning(status)
 
 
-def render_sala_card(
-    sala,
-    coluna,
-    contexto,
-    usuario_atual,
-):
-    with coluna:
-        favoritada = sala["id"] in st.session_state.favoritos
+def _enviar_pedido(usuario, sala, data, inicio, fim, equipamentos=False, evento=False):
+    try:
+        criar_pedido_reserva(
+            usuario_atual=usuario,
+            sala=sala,
+            data=data,
+            hora_inicio=inicio,
+            hora_fim=fim,
+            necessita_equipamentos=equipamentos,
+            evento_institucional=evento,
+        )
+    except Exception as erro:
+        st.error(f"Não foi possível criar o pedido: {erro}")
+        return
+    st.session_state.aviso_pedido = "Pedido enviado. Acompanhe a análise em Minhas Reservas."
+    st.session_state.resultado_busca = None
+    st.rerun()
 
+
+def render_sala_card(sala, coluna, contexto, usuario_atual):
+    from datetime import time
+    from controllers.favorito_controller import definir_favorito
+    from utils.relogio import hoje_local
+
+    with coluna:
+        favoritada = str(sala["id"]) in st.session_state.get("favoritos", set())
         nome = escape(str(sala.get("nome", "Sala")))
         capacidade = escape(str(sala.get("capacidade", "—")))
         recursos = escape(str(sala.get("recursos") or "Nenhum recurso informado"))
         andar = escape(str(sala.get("andar") or "Localização não informada"))
+        chave = f"{contexto}_{sala['id']}"
 
         with st.container(border=True):
             st.markdown(
-                f"""
-                <div style="padding: 0.25rem 0 0.8rem;">
-                    <div style="
-                        color: #13213a;
-                        font-size: 1.05rem;
-                        font-weight: 700;
-                        margin-bottom: 0.7rem;
-                    ">
-                        🏢 {nome}
-                    </div>
-                    <div style="color: #52627a; margin-bottom: 0.45rem;">
-                        👥 Capacidade: {capacidade} pessoas
-                    </div>
-                    <div style="color: #52627a; margin-bottom: 0.45rem;">
-                        🖥️ {recursos}
-                    </div>
-                    <div style="color: #52627a;">
-                        📍 {andar}
-                    </div>
-                </div>
-                """,
+                f"<h4>🏢 {nome}</h4><p>👥 {capacidade} pessoas</p>"
+                f"<p>🖥️ {recursos}</p><p>📍 {andar}</p>",
                 unsafe_allow_html=True,
             )
+            if contexto == "favoritos":
+                with st.popover("Reservar", use_container_width=True):
+                    with st.form(f"periodo_favorito_{chave}"):
+                        data = st.date_input("Data", value=hoje_local(), min_value=hoje_local(), key=f"data_{chave}")
+                        inicio = st.time_input("Horário inicial", value=time(9), key=f"inicio_{chave}")
+                        fim = st.time_input("Horário final", value=time(10), key=f"fim_{chave}")
+                        equipamentos = st.checkbox("Precisa de equipamentos especiais", key=f"equip_{chave}")
+                        evento = st.checkbox("Evento institucional", key=f"evento_{chave}")
+                        confirmar = st.form_submit_button("Confirmar pedido", type="primary")
+                    if confirmar:
+                        _enviar_pedido(usuario_atual, sala, data.isoformat(),
+                                       inicio.strftime("%H:%M"), fim.strftime("%H:%M"),
+                                       equipamentos, evento)
+            else:
+                data = st.session_state.get("busca_data_iso")
+                inicio = st.session_state.get("busca_hora_inicio")
+                fim = st.session_state.get("busca_hora_fim")
+                st.caption(f"Período do pedido: {data} · {inicio}–{fim}")
+                if st.button("Confirmar pedido", key=f"reservar_{chave}", use_container_width=True,
+                             disabled=not all((data, inicio, fim))):
+                    _enviar_pedido(
+                        usuario_atual, sala, data, inicio, fim,
+                        st.session_state.get("busca_necessita_equipamentos", False),
+                        st.session_state.get("busca_evento_institucional", False),
+                    )
 
-            col_reservar, col_favorito = st.columns([2, 1])
-
-            with col_reservar:
-                if st.button(
-                    "Reservar",
-                    key=f"reservar_{contexto}_{sala['id']}",
-                    use_container_width=True,
-                ):
-                    data = st.session_state.get("busca_data_iso")
-                    hora_inicio = st.session_state.get("busca_hora_inicio")
-                    hora_fim = st.session_state.get("busca_hora_fim")
-
-                    try:
-                        criar_pedido_reserva(
-                            usuario_atual=usuario_atual,
-                            sala=sala,
-                            data=data,
-                            hora_inicio=hora_inicio,
-                            hora_fim=hora_fim,
-                            necessita_equipamentos=st.session_state.get(
-                                "busca_necessita_equipamentos",
-                                False,
-                            ),
-                            evento_institucional=st.session_state.get(
-                                "busca_evento_institucional",
-                                False,
-                            ),
-                        )
-                        st.success(
-                            "Pedido enviado. O status inicial é Pendente."
-                        )
-                        st.rerun()
-                    except Exception as erro:
-                        st.error(
-                            f"Não foi possível criar o pedido: {erro}"
-                        )
-
-            with col_favorito:
-                rotulo = (
-                    "Remover"
-                    if contexto == "favoritos"
-                    else ("♥" if favoritada else "♡")
-                )
-
-                if st.button(
-                    rotulo,
-                    key=f"fav_{contexto}_{sala['id']}",
-                    use_container_width=True,
-                ):
-                    if favoritada:
-                        st.session_state.favoritos.discard(sala["id"])
-                    else:
-                        st.session_state.favoritos.add(sala["id"])
+            if st.button("Remover favorito" if favoritada else "♡ Favoritar",
+                         key=f"fav_{chave}", use_container_width=True):
+                try:
+                    st.session_state.favoritos = definir_favorito(
+                        usuario_atual, sala["id"], not favoritada
+                    )
+                except Exception as erro:
+                    st.error(f"Não foi possível atualizar o favorito: {erro}")
+                else:
                     st.rerun()
