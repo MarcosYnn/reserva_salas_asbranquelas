@@ -1,6 +1,6 @@
 # Implementação da revisão final
 
-Alterações desenvolvidas a partir da main 919feca, incorporando a revisão documental enviada pela equipe. Este documento descreve a branch de implementação; a disponibilidade no ambiente publicado depende da integração e da homologação.
+Alterações desenvolvidas a partir da main 919feca, incorporando a revisão documental enviada pela equipe. A implementação foi integrada pelo PR #15. Os resultados locais abaixo preservam o histórico da entrega; a homologação parcial em serviço real está no [registro integrado de 20/11/2026](validacao-integrada-2026-11-20.md).
 
 ## Reservas e coordenação das transações
 
@@ -91,3 +91,11 @@ Manutenção/indisponibilidade, informações de acessibilidade, edição do pr�
 ## Evolução após a revisão final
 
 A finalidade do pedido foi implementada no card 1844e81e-de39-4390-b2ec-d2b88f897013. Consulte [o registro da funcionalidade](finalidade-reserva.md). A suíte atual passou com 87 testes e seis subtestes; o resultado de 50 testes acima corresponde à entrega original do PR #15.
+
+## Homologação parcial em serviço real — 20/11/2026
+
+Dois locatários distintos enviaram pedidos da mesma sala para 22/11, 09:00–10:00 e 09:30–10:30. O administrador aprovou o primeiro; a tentativa de aprovar o segundo foi bloqueada. Após o cancelamento do primeiro, o segundo pôde ser aprovado e apareceu no calendário do titular. O titular cancelou o segundo e o calendário deixou de exibi-lo. Os dois documentos terminaram com status Cancelada no Firestore.
+
+Também foram observados criação com e sem finalidade, compatibilidade com registros antigos, bloqueio de duplicidade e horário passado, favoritos com período/texto próprios e isolamento das consultas entre contas. O favorito utilizado foi removido. A conta adicional de teste permanece cadastrada.
+
+O cenário de aprovação foi sequencial. Não comprova concorrência simultânea, revalidação do Proprietário, novas autenticações da mesma conta, bloqueio/rebaixamento em sessão ativa ou responsividade em celular. O checklist de homologação acima continua sendo um roteiro; consulte os resultados e evidências no [registro integrado](validacao-integrada-2026-11-20.md).
