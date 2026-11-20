@@ -23,6 +23,7 @@ STATUS_RESERVA = {
 }
 
 PRIORIDADES_RESERVA = {1, 2, 3}
+LIMITE_FINALIDADE = 500
 
 # Uma reserva pendente pode receber uma decisão ou ser cancelada.
 # Uma aprovada pode ser cancelada. Recusada e cancelada são finais.
@@ -64,6 +65,20 @@ def _validar_data_horarios(data, hora_inicio, hora_fim):
         )
 
 
+def normalizar_finalidade(finalidade):
+    """Campo opcional; preserva o conteúdo e remove apenas espaços externos."""
+    if finalidade is None:
+        return ""
+    if not isinstance(finalidade, str):
+        raise ValueError("A finalidade da reserva deve ser um texto.")
+    finalidade = finalidade.strip()
+    if len(finalidade) > LIMITE_FINALIDADE:
+        raise ValueError(
+            f"A finalidade da reserva deve ter no máximo {LIMITE_FINALIDADE} caracteres."
+        )
+    return finalidade
+
+
 def criar_reserva(
     sala_id,
     sala_nome,
@@ -78,8 +93,10 @@ def criar_reserva(
     evento_institucional=False,
     precisa_revisao_admin=False,
     conflitos_reserva_ids=None,
+    finalidade="",
 ):
     _validar_data_horarios(data, hora_inicio, hora_fim)
+    finalidade = normalizar_finalidade(finalidade)
 
     campos_obrigatorios = {
         "sala_id": sala_id,
@@ -113,6 +130,7 @@ def criar_reserva(
         "data": data,
         "hora_inicio": hora_inicio,
         "hora_fim": hora_fim,
+        "finalidade": finalidade,
         "status": PENDENTE,
         "prioridade": prioridade,
         "necessita_equipamentos": bool(necessita_equipamentos),

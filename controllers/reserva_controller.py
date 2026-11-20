@@ -174,8 +174,10 @@ def criar_pedido_reserva(
     hora_fim,
     necessita_equipamentos=False,
     evento_institucional=False,
+    finalidade="",
 ):
     _exigir_perfil(usuario_atual, {TIPO_LOCATARIO})
+    finalidade = reserva_model.normalizar_finalidade(finalidade)
 
     if not sala:
         raise ValueError("Selecione uma sala válida.")
@@ -212,6 +214,7 @@ def criar_pedido_reserva(
         evento_institucional=evento_institucional,
         precisa_revisao_admin=avaliacao["precisa_revisao_admin"],
         conflitos_reserva_ids=ids_conflitos,
+        finalidade=finalidade,
     )
 
 
