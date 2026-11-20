@@ -34,6 +34,7 @@ from utils.estado import (
 from views.calendario_locatario_view import renderizar_calendario_locatario
 from views.mapa_campus_view import pagina_mapa_campus
 from views.reserva_view import renderizar_reservas
+from models.reserva_firebase_model import LIMITE_FINALIDADE
 
 
 def _formatar_data(data_iso):
@@ -261,6 +262,12 @@ def pagina_buscar_salas(usuario):
                               format_func=lambda chave: rotulos[chave])
     equipamentos = st.checkbox("Precisa de equipamentos especiais")
     evento = st.checkbox("É um evento institucional")
+    finalidade = st.text_area(
+        "Finalidade da reserva (opcional)",
+        max_chars=LIMITE_FINALIDADE,
+        key="finalidade_busca",
+        help="Ex.: aula, reunião ou apresentação. Até 500 caracteres.",
+    )
     criterios = (data.isoformat(), inicio.strftime("%H:%M"), fim.strftime("%H:%M"),
                  pessoas, localizacao.strip().casefold(), tuple(sorted(recursos)),
                  equipamentos, evento)
@@ -305,7 +312,7 @@ def pagina_buscar_salas(usuario):
         with coluna:
             if st.session_state.get("busca_conflitos_por_sala", {}).get(str(sala["id"])):
                 st.warning("Há pedido ou reserva neste período. Sujeito à análise.")
-        render_sala_card(sala, coluna, "busca", usuario)
+        render_sala_card(sala, coluna, "busca", usuario, finalidade=finalidade)
 
 
 def pagina_minhas_reservas(usuario):
