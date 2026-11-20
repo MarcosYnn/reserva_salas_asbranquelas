@@ -2,7 +2,7 @@
 
 Projeto acadêmico da equipe **As Branquelas**, desenvolvido na disciplina de **Engenharia de Software**, para consultar espaços, acompanhar reservas e gerenciar salas e contas.
 
-> **2ª etapa — implementação da revisão final em 20/11/2026:** alterações desta branch partem da `main` [919feca](https://github.com/MarcosYnn/reserva_salas_asbranquelas/commit/919fecac68e74ecb7c7311a23cd524811c8987be). Foram implementadas coordenação transacional das reservas, revalidação de acesso, favoritos por UID, seleção explícita de período, filtros por recursos/localização e ajustes de navegação. A suíte local passou com **50 testes e seis subtestes**, usando as dependências reais, armazenamento simulado e testes de interface Streamlit. A validação com Firebase configurado e a homologação em celular continuam pendentes. Consulte [a implementação e seus limites](docs/implementacao-revisao-final.md).
+> **2ª etapa — finalidade da reserva em 20/11/2026:** esta branch parte da `main` [c6bd29b](https://github.com/MarcosYnn/reserva_salas_asbranquelas/commit/c6bd29bb0af3beefa64932648e2dc5fd19cee488), com a revisão final do PR #15 já integrada. O locatário pode informar finalidade opcional de até 500 caracteres pela busca ou pelos Favoritos; o texto é persistido e aparece nos detalhes dos três perfis, mantendo a compatibilidade com reservas antigas. A suíte local passou com **87 testes e seis subtestes**, usando dependências reais, armazenamento simulado e AppTest do Streamlit. A homologação com Firebase e celular continua pendente. Consulte [a implementação da finalidade](docs/finalidade-reserva.md) e [a revisão anterior](docs/implementacao-revisao-final.md).
 
 ## Problema
 
@@ -100,7 +100,7 @@ Os identificadores abaixo preservam o levantamento anterior para manter a rastre
 | RF08 | O sistema deve permitir selecionar uma sala para reserva. | Implementado: pedido no Firestore |
 | RF09 | O sistema deve permitir selecionar a data da reserva. | Implementado na busca |
 | RF10 | O sistema deve permitir selecionar o horário inicial e final da reserva. | Implementado: validação de período e data futura no modelo |
-| RF11 | O sistema deve permitir informar a finalidade da reserva quando necessário. | Pendente |
+| RF11 | O sistema deve permitir informar a finalidade da reserva quando necessário. | Implementado no código: campo opcional de até 500 caracteres na busca e nos Favoritos, persistido e exibido nos detalhes |
 | RF12 | O sistema deve permitir confirmar uma reserva. | Implementado no código: decisão administrativa com revalidação transacional |
 | RF13 | O sistema deve registrar as reservas realizadas. | Implementado: Firestore |
 | RF14 | O sistema deve permitir que o usuário consulte suas reservas. | Implementado: filtro por UID do locatário |
@@ -339,6 +339,7 @@ classDiagram
         status: string
         prioridade: int
         precisa_revisao_admin: bool
+        finalidade: string
     }
     Usuario "1" --> "0..*" Reserva : solicita por UID
     Sala "1" --> "0..*" Reserva : recebe pedidos
@@ -498,7 +499,7 @@ O diagrama simplifica a arquitetura inspirada em MVC: existem acessos diretos a 
 | Credenciais | Firebase Authentication | UID, e-mail, senha e situação da conta; senha não é gravada no documento do Firestore |
 | Perfis | `usuarios/{uid}` no Firestore | `usuario`, `nome`, `email`, `perfil`, `status`; ID do documento deve corresponder ao UID Auth |
 | Salas | `salas/{id}` no Firestore | `id`, `nome`, `capacidade`, `localizacao`, `proprietario` e flags de recursos |
-| Reservas | `reservas/{id}` no Firestore | `sala_id`, `sala_nome`, `solicitante_uid`, `solicitante_nome`, `proprietario_login`, `data`, `hora_inicio`, `hora_fim`, `status`, prioridade, flags de conflito e timestamps |
+| Reservas | `reservas/{id}` no Firestore | `sala_id`, `sala_nome`, `solicitante_uid`, `solicitante_nome`, `proprietario_login`, `data`, `hora_inicio`, `hora_fim`, `status`, `finalidade` opcional, prioridade, flags de conflito e timestamps |
 | Favoritos | `usuarios/{uid}/favoritos/{sala_id}` no Firestore | IDs de salas persistidos por conta; sessão mantém cópia para a interface |
 
 As salas permitem projetor, computador, internet, webcam, quadro e ar-condicionado. Novas salas recebem ID gerado por UUID; as demonstrativas usam IDs numéricos.
@@ -666,7 +667,7 @@ Os identificadores originais foram preservados para rastreabilidade; as situaç�
 | REV08 | Média | Cancelamento com titularidade na transação e liberação de período; teste local aprovado |
 | REV09 | Média | Próxima reserva apenas aprovada e futura; falha de carga não simula disponibilidade; fuso explícito |
 | REV10 | Média | Edição global pelo admin, calendário e filtros implementados; manutenção e edição de perfil pendentes |
-| REV11 | Média | 50 testes e seis subtestes locais passaram; dependências diretas fixadas, Python 3.12 e CI configurados; celular pendente |
+| REV11 | Média | 87 testes e seis subtestes locais passaram; dependências diretas fixadas, Python 3.12 e CI configurados; celular pendente |
 | REV12 | Média | Mapa com controle de acesso e menu para três perfis; validar desenho das rotas e uso real no campus |
 
 A revisão do card **“Revisão do código”** deve vincular cada correção ao card correspondente do PraxiLab e ao PR que a implementar. O calendário já está integrado; testar a atualização após aprovação e cancelamento. Agenda do administrador é uma opção distinta, ainda sem fluxo implementado.
@@ -706,7 +707,7 @@ Para executar os testes de datas (sem operações Firestore):
 python -m unittest discover -s tests -p "test_validacao_datas_reservas.py" -v
 ~~~
 
-A regra utiliza o fuso institucional definido por `APP_TIMEZONE`, com padrão `America/Porto_Velho`. Consulte [o roteiro de validação](docs/validacao-datas-reservas.md). A suíte desta branch passou com 50 testes e seis subtestes, importando o SDK real e usando seu decorator transacional real sobre armazenamento MVCC simulado; os testes de interface usam AppTest do Streamlit. O armazenamento simulado exercita conflito de versões, repetição de transações e rollback; não certifica comportamento do serviço remoto. Os testes T01–T18 ainda precisam de homologação com Firebase.
+A regra utiliza o fuso institucional definido por `APP_TIMEZONE`, com padrão `America/Porto_Velho`. Consulte [o roteiro de validação](docs/validacao-datas-reservas.md). A suíte desta branch passou com 87 testes e seis subtestes, importando o SDK real e usando seu decorator transacional real sobre armazenamento MVCC simulado; os testes de interface usam AppTest do Streamlit. O armazenamento simulado exercita conflito de versões, repetição de transações e rollback; não certifica comportamento do serviço remoto. Os testes T01–T18 ainda precisam de homologação com Firebase.
 
 Para executar toda a suíte, sem secrets:
 
@@ -809,16 +810,20 @@ Rastreabilidade: [issue #14 — revisão final](https://github.com/MarcosYnn/res
 | Acesso | UID de perfil conferido; status, perfil e conta Auth reconsultados; dados da conta limpos no logout | Bloqueio, exclusão, rebaixamento e falha de consulta testados |
 | Favoritos e busca | Favoritos persistidos por UID; formulário de período próprio; busca invalidada quando filtros mudam | Isolamento e interface testados |
 | Interface | Filtros de localização/recursos; mapa nos três perfis; gestão global de salas pelo administrador; atalhos provisórios retirados | Testes automatizados parciais; homologação visual pendente |
-| Ambiente | Python 3.12, dependências diretas fixadas, fuso configurável e workflow de testes | 50 testes e seis subtestes passaram localmente |
+| Ambiente | Python 3.12, dependências diretas fixadas, fuso configurável e workflow de testes | 87 testes e seis subtestes passaram localmente |
 
 Consulte [docs/implementacao-revisao-final.md](docs/implementacao-revisao-final.md) para detalhes das transações, execução de testes e card de homologação.
+
+## Finalidade da reserva
+
+O campo opcional está disponível na busca e nos Favoritos, com validação no servidor, persistência e exibição como texto simples. Reservas antigas sem o campo mostram “Não informada”. Ver [critérios, testes e homologação](docs/finalidade-reserva.md).
 
 ## Próximos passos
 
 1. Revisar e integrar o PR desta implementação, vinculando-o aos cards reais do PraxiLab.
 2. Executar T01–T18 em projeto Firebase de teste, incluindo disputa em duas sessões independentes.
 3. Homologar computador/celular e conferir mapa e calendário nos perfis correspondentes.
-4. Concluir os requisitos que permanecerem no escopo: manutenção, finalidade, acessibilidade, edição de perfil e recuperação de senha.
+4. Concluir os requisitos que permanecerem no escopo: manutenção, acessibilidade, edição de perfil e recuperação de senha.
 5. Migrar o vínculo de propriedade das salas do login para UID com planejamento para dados existentes.
 6. Revisar concorrência da proteção do último administrador ativo e permissões da conta de serviço.
 7. Consolidar evidências individuais e relatório final; não marcar testes de serviço remoto como aprovados com base somente na suíte local.

@@ -103,3 +103,45 @@ def test_registro_antigo_sem_campo_continua_consultavel(ambiente):
     del ambiente.data["reservas/" + id]["finalidade"]
     assert model.buscar_reserva(id)["id"] == id
     assert "finalidade" not in model.buscar_reserva(id)
+
+
+@pytest.mark.parametrize("perfil,ids_esperados", [
+    ("Locatário", {"propria"}),
+    ("Proprietário", {"propria", "mesma_sala"}),
+    ("Administrador", {"propria", "mesma_sala", "outra_sala"}),
+])
+def test_finalidade_respeita_filtro_de_reservas_por_perfil(
+    ambiente, monkeypatch, perfil, ids_esperados
+):
+    for id, uid, sala_id in [
+        ("propria", "u1", "s1"),
+        ("mesma_sala", "u2", "s1"),
+        ("outra_sala", "u2", "s2"),
+    ]:
+        ambiente.data["reservas/" + id] = {
+            "solicitante_uid": uid, "sala_id": sala_id,
+            "data": "2030-05-11", "hora_inicio": "09:00",
+            "finalidade": "Finalidade do pedido " + id,
+        }
+    monkeypatch.setattr(controller.sala_model, "listar_salas", lambda: [
+        {"id": "s1", "proprietario": "dono"},
+        {"id": "s2", "proprietario": "outro"},
+    ])
+    reservas = controller.listar_reservas_usuario(
+        {"id": "u1", "tipo": perfil, "login": "dono"}
+    )
+    assert {reserva["id"] for reserva in reservas} == ids_esperados
+    assert {reserva["finalidade"] for reserva in reservas} == {
+        "Finalidade do pedido " + id for id in ids_esperados
+    }
+
+
+@pytest.mark.parametrize("perfil", ["Proprietário", "Administrador"])
+def test_finalidade_nao_libera_criacao_para_outro_perfil(ambiente, perfil):
+    with pytest.raises(PermissionError):
+        controller.criar_pedido_reserva(
+            {"id": "u1", "nome": "Arthur", "tipo": perfil},
+            {"id": "s1", "nome": "Sala"},
+            "2030-05-11", "09:00", "10:00", finalidade="Reunião",
+        )
+    assert list(ambiente.data) == ["salas/s1"]

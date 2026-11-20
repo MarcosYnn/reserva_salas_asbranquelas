@@ -85,4 +85,9 @@ Não marcar este card como concluído com base apenas nos testes locais.
 
 ## Pendências fora desta implementação
 
-Manutenção/indisponibilidade, finalidade do pedido, informações de acessibilidade, edição do próprio perfil e recuperação de senha continuam dependentes de definição de escopo e desenvolvimento. O vínculo do proprietário da sala ainda utiliza login; uma migração para UID precisa considerar os dados existentes. A proteção do último administrador ativo ainda não é transacional.
+Manutenção/indisponibilidade, informações de acessibilidade, edição do próprio perfil e recuperação de senha continuam dependentes de definição de escopo e desenvolvimento. O vínculo do proprietário da sala ainda utiliza login; uma migração para UID precisa considerar os dados existentes. A proteção do último administrador ativo ainda não é transacional.
+
+
+## Evolução após a revisão final
+
+A finalidade do pedido foi implementada no card 1844e81e-de39-4390-b2ec-d2b88f897013. Consulte [o registro da funcionalidade](finalidade-reserva.md). A suíte atual passou com 87 testes e seis subtestes; o resultado de 50 testes acima corresponde à entrega original do PR #15.
