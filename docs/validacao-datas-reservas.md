@@ -17,9 +17,9 @@ Reservas para hoje com início futuro e reservas para dias futuros continuam per
 
 ## Relógio utilizado
 
-A regra usa `datetime.now()`, o relógio local do servidor, acompanhando a referência atual da aplicação (`date.today()` nas páginas). O início precisa ser posterior ao instante atual; um minuto que já começou é considerado passado.
+A regra usa `utils/relogio.py`, com o fuso institucional definido por `APP_TIMEZONE` e padrão `America/Porto_Velho`. As páginas utilizam a mesma referência. O início precisa ser posterior ao instante atual; um minuto que já começou é considerado passado.
 
-O fuso do ambiente deve ser conferido antes da validação no site publicado. A adoção de um fuso institucional explícito e consistente em toda a aplicação é uma configuração a definir pela equipe.
+Configure `APP_TIMEZONE` com outro identificador IANA se a instituição estiver em outro fuso. A validação acontece também na aprovação para impedir que um pedido antigo seja confirmado depois do início.
 
 ## Testes de regressão
 
@@ -43,10 +43,11 @@ Os testes usam relógio fixo em 10/05/2030 às 12:00:30 e não chamam operaçõe
 | Data inválida ou ausente | Recusar com mensagem de formato |
 | Horário inválido ou ausente | Recusar com mensagem de formato |
 
-**Situação em 16/11/2026:** testes preparados, execução pendente porque o ambiente de execução da sessão está indisponível. Não registrar como aprovados até executá-los.
+**Situação em 20/11/2026:** nove testes de datas passaram com as dependências reais. A suíte completa da revisão final contém 50 testes aprovados e seis subtestes. A homologação com Firebase continua pendente.
 
 ## Conferência manual
 
 Em um projeto Firebase de teste, tentar reservar ontem e hoje em horário passado. Confirmar que a mensagem é apresentada e que nenhum documento é criado para a tentativa inválida. Depois solicitar um horário futuro e verificar que o pedido é gravado como Pendente. Registrar ambiente, fuso, data, responsável e resultado no card.
 
-Esta alteração não modifica pedidos existentes, aprovação de conflitos, bloqueio de contas ou o layout da busca.
+A implementação da revisão final também altera aprovação, autorização e busca; consulte [o registro da implementação](implementacao-revisao-final.md).
+

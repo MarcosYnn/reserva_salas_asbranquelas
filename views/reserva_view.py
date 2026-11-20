@@ -113,6 +113,13 @@ def _cancelar_e_atualizar(usuario, reserva_id):
 
 
 def renderizar_reservas(usuario, mostrar_titulo=True):
+    from controllers.sessao_controller import revalidar_usuario
+
+    try:
+        revalidar_usuario(usuario)
+    except PermissionError as erro:
+        st.error(str(erro))
+        return
     perfil = usuario.get("tipo")
 
     if perfil not in {
@@ -141,6 +148,7 @@ def renderizar_reservas(usuario, mostrar_titulo=True):
         st.info("Nenhum pedido de reserva encontrado.")
         return
 
+    perfil = usuario.get("tipo")
     for reserva in reservas:
         reserva_id = reserva["id"]
         status = reserva.get("status", "Pendente")
@@ -232,3 +240,4 @@ def renderizar_reservas(usuario, mostrar_titulo=True):
                     key=f"cancelar_locatario_{reserva_id}",
                 ):
                     _cancelar_e_atualizar(usuario, reserva_id)
+

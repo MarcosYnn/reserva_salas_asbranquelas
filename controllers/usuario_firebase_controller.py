@@ -22,6 +22,9 @@ PADRAO_USUARIO = re.compile(r"^[a-z0-9._-]{3,30}$")
 
 
 def _exigir_admin(usuario_atual):
+    from controllers.sessao_controller import revalidar_usuario
+
+    revalidar_usuario(usuario_atual)
     if not usuario_atual or usuario_atual.get("tipo") != TIPO_ADMIN:
         raise PermissionError(
             "Apenas um administrador pode gerenciar usuários."
@@ -200,3 +203,4 @@ def excluir_usuario_admin(usuario_atual, uid):
 
     _proteger_ultimo_admin(uid)
     model.excluir_usuario(uid)
+

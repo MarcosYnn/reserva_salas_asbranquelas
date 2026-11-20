@@ -1,3 +1,4 @@
+from utils.relogio import hoje_local
 import streamlit as st
 from html import escape
 from datetime import date, datetime
@@ -84,16 +85,13 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
 
     with st.sidebar:
         st.markdown('<div class="sidebar-brand">▦ &nbsp; Reserva de Salas<small>SISTEMA ACADÊMICO</small></div>', unsafe_allow_html=True)
-        itens = [("⌂", "Início"), ("▦", "Salas"), ("⌖", "Mapa"), ("▣", "Reservas"), ("◷", "Agenda"), ("⚙", "Administração")]
+        itens = [("⌂", "Início"), ("▦", "Salas"), ("⌖", "Mapa"), ("▣", "Reservas"), ("⚙", "Administração")]
+        if st.session_state.admin_pagina not in {pagina for _, pagina in itens}:
+            st.session_state.admin_pagina = "Início"
         for icone, pagina in itens:
             if st.button(f"{icone}  {pagina}", key=f"side_{pagina}", use_container_width=True,
                          type="primary" if st.session_state.admin_pagina == pagina else "secondary"):
                 navegar(pagina)
-        st.markdown('<div class="sidebar-label">AJUDA</div>', unsafe_allow_html=True)
-        if st.button("ⓘ  Suporte", key="side_suporte", use_container_width=True):
-            navegar("Suporte")
-        if st.button("♧  Notificações", key="side_notificacoes", use_container_width=True):
-            navegar("Notificações")
         st.markdown('<div class="sidebar-label">CONTA</div>', unsafe_allow_html=True)
         if st.button("↪  Sair", key="admin_sair", use_container_width=True):
             from utils.estado import fazer_logout
@@ -205,7 +203,7 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
             erros_carga.append(f"usuários: {erro}")
 
         from models import reserva_firebase_model as reserva_model
-        hoje = date.today().isoformat()
+        hoje = hoje_local().isoformat()
         pendentes = [
             reserva for reserva in reservas
             if reserva.get("status") == reserva_model.PENDENTE
@@ -230,6 +228,7 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
                 "Alguns indicadores não puderam ser carregados. "
                 "Confira a conexão com o Firebase e atualize a página."
             )
+            return
         for inicio in range(0, len(dados), 2):
             metricas = st.columns(2, gap="small")
             for coluna, (icone, valor, sufixo, legenda) in zip(
@@ -301,3 +300,4 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
                     f'<span>{quantidade}</span></div>'
                 )
             st.markdown(html_status + '</div>', unsafe_allow_html=True)
+

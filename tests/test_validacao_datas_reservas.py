@@ -15,7 +15,7 @@ class RelogioFixo(datetime):
 
 class ValidacaoDataHorariosTests(unittest.TestCase):
     def setUp(self):
-        relogio = patch.object(model, "datetime", RelogioFixo)
+        relogio = patch.object(model, "agora_local", RelogioFixo.now)
         relogio.start()
         self.addCleanup(relogio.stop)
 
@@ -64,3 +64,4 @@ class ValidacaoDataHorariosTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -28,6 +28,13 @@ def exigir_autenticacao():
     if not usuario_autenticado():
         st.error("Você precisa estar autenticado para acessar esta página.")
         st.stop()
+    from controllers.sessao_controller import revalidar_usuario
+
+    try:
+        revalidar_usuario(st.session_state.usuario)
+    except PermissionError as erro:
+        st.error(str(erro))
+        st.stop()
 
 
 def exigir_tipo(usuario, tipos_permitidos):
@@ -43,9 +50,18 @@ def exigir_tipo(usuario, tipos_permitidos):
         st.error("Você precisa estar autenticado para acessar esta página.")
         st.stop()
 
+    from controllers.sessao_controller import revalidar_usuario
+
+    try:
+        revalidar_usuario(usuario)
+    except PermissionError as erro:
+        st.error(str(erro))
+        st.stop()
+
     if usuario["tipo"] not in tipos_permitidos:
         st.error(
             f"Acesso negado: sua conta é do tipo **{usuario['tipo']}** e "
             "não tem permissão para acessar esta página."
         )
         st.stop()
+

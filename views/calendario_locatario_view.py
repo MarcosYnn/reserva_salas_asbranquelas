@@ -1,3 +1,4 @@
+from utils.relogio import hoje_local
 import calendar
 from datetime import date
 
@@ -39,7 +40,7 @@ def renderizar_calendario_locatario(usuario):
 
     chave_mes = "calendario_locatario_mes"
     if chave_mes not in st.session_state:
-        hoje = date.today()
+        hoje = hoje_local()
         st.session_state[chave_mes] = date(hoje.year, hoje.month, 1)
 
     mes_atual = st.session_state[chave_mes]
@@ -174,3 +175,4 @@ def renderizar_calendario_locatario(usuario):
 
     if not reservas_confirmadas:
         st.info("Você ainda não tem reservas confirmadas neste calendário.")
+

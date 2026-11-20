@@ -15,6 +15,9 @@ PRIORIDADE_EVENTO = 3
 
 
 def _exigir_perfil(usuario, perfis_permitidos):
+    from controllers.sessao_controller import revalidar_usuario
+
+    revalidar_usuario(usuario)
     if not usuario:
         raise PermissionError("É necessário estar autenticado.")
 
@@ -307,4 +310,9 @@ def cancelar_reserva_locatario(usuario_atual, reserva_id):
         reserva_id=reserva_id,
         novo_status=reserva_model.CANCELADA,
         ator_uid=_uid(usuario_atual),
+        solicitante_uid=_uid(usuario_atual),
     )
+
+
+def validar_periodo_reserva(data, hora_inicio, hora_fim):
+    reserva_model._validar_data_horarios(data, hora_inicio, hora_fim)

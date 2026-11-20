@@ -1,4 +1,5 @@
-﻿from datetime import date, datetime, time
+from utils.relogio import hoje_local, agora_local
+from datetime import date, datetime, time
 from views.admin_view import mostrar_admin
 
 import streamlit as st
@@ -15,10 +16,6 @@ from controllers.reserva_controller import (
 )
 
 from controllers.autorizacao_controller import exigir_tipo
-from controllers.reserva_controller import (
-    listar_reservas_ativas_para_busca,
-    listar_reservas_usuario,
-)
 from utils.componentes import (
     render_card,
     renderizar_banner_dashboard,
@@ -173,9 +170,9 @@ def pagina_dashboard_locatario(usuario):
         minhas_reservas = listar_reservas_usuario(usuario)
     except Exception as erro:
         st.error(f"Não foi possível carregar suas reservas: {erro}")
-        minhas_reservas = []
+        return
 
-    hoje = date.today().isoformat()
+    hoje = hoje_local().isoformat()
     reservas_hoje = [
         reserva
         for reserva in minhas_reservas
@@ -195,8 +192,9 @@ def pagina_dashboard_locatario(usuario):
     reservas_ativas = [
         reserva
         for reserva in minhas_reservas
-        if reserva.get("status") in {"Pendente", "Aprovada"}
-        and reserva.get("data", "") >= hoje
+        if reserva.get("status") == "Aprovada"
+        and (reserva.get("data", ""), reserva.get("hora_inicio", "")) >
+        (hoje, agora_local().strftime("%H:%M"))
     ]
     proxima = min(
         reservas_ativas,
@@ -240,147 +238,74 @@ def pagina_dashboard_locatario(usuario):
 
 def pagina_buscar_salas(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
+    from controllers.reserva_controller import validar_periodo_reserva
+    from utils.busca import invalidar_busca_se_alterada
+    from utils.estado import MAPA_RECURSOS
 
-    st.markdown(
-        '<div class="page-intro">'
-        "Filtre por data, horário e capacidade."
-        "</div>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        '<div class="search-section-heading">'
-        "🔎 Encontre uma sala disponível</div>",
-        unsafe_allow_html=True,
-    )
-
+    st.markdown("Filtre por período, capacidade, localização e recursos.")
+    aviso = st.session_state.pop("aviso_pedido", None)
+    if aviso:
+        st.success(aviso)
     col1, col2, col3, col4 = st.columns(4)
-
     with col1:
-        data_busca = st.date_input(
-            "Data",
-            value=date.today(),
-        )
-
+        data = st.date_input("Data", value=hoje_local(), min_value=hoje_local())
     with col2:
-        horario_inicio = st.time_input(
-            "Horário inicial",
-            value=time(9, 0),
-        )
-
+        inicio = st.time_input("Horário inicial", value=time(9))
     with col3:
-        horario_fim = st.time_input(
-            "Horário final",
-            value=time(10, 0),
-        )
-
+        fim = st.time_input("Horário final", value=time(10))
     with col4:
-        pessoas = st.number_input(
-            "Quantidade de pessoas",
-            min_value=1,
-            value=4,
-        )
-
-    col5, col6 = st.columns(2)
-
-    with col5:
-        necessita_equipamentos = st.checkbox(
-            "Precisa de equipamentos especiais"
-        )
-
-    with col6:
-        evento_institucional = st.checkbox(
-            "É um evento institucional"
-        )
-
+        pessoas = st.number_input("Quantidade de pessoas", min_value=1, value=4)
+    localizacao = st.text_input("Localização", placeholder="Ex.: 2º andar")
+    rotulos = dict(MAPA_RECURSOS)
+    recursos = st.multiselect("Recursos necessários", options=list(rotulos),
+                              format_func=lambda chave: rotulos[chave])
+    equipamentos = st.checkbox("Precisa de equipamentos especiais")
+    evento = st.checkbox("É um evento institucional")
+    criterios = (data.isoformat(), inicio.strftime("%H:%M"), fim.strftime("%H:%M"),
+                 pessoas, localizacao.strip().casefold(), tuple(sorted(recursos)),
+                 equipamentos, evento)
+    invalidar_busca_se_alterada(st.session_state, criterios)
     if st.button("🔎 Procurar salas", type="primary"):
-        if horario_fim <= horario_inicio:
-            st.session_state.resultado_busca = []
-            st.session_state.busca_conflitos_por_sala = {}
-            st.error("O horário final deve ser depois do horário inicial.")
-        else:
-            data_iso = data_busca.strftime("%Y-%m-%d")
-            inicio_txt = horario_inicio.strftime("%H:%M")
-            fim_txt = horario_fim.strftime("%H:%M")
-
-            st.session_state.busca_data_iso = data_iso
-            st.session_state.busca_hora_inicio = inicio_txt
-            st.session_state.busca_hora_fim = fim_txt
-            st.session_state.busca_necessita_equipamentos = (
-                necessita_equipamentos
-            )
-            st.session_state.busca_evento_institucional = (
-                evento_institucional
-            )
-
-            try:
-                reservas_ativas = listar_reservas_ativas_para_busca(usuario)
-            except Exception as erro:
-                st.error(f"Não foi possível consultar reservas: {erro}")
-                reservas_ativas = []
-
-            salas_encontradas = [
-                sala
-                for sala in st.session_state.get("salas", [])
-                if sala["capacidade"] >= pessoas
-            ]
-
-            conflitos_por_sala = {}
-
-            for sala in salas_encontradas:
-                conflitos = buscar_conflitos(
-                    reservas=reservas_ativas,
-                    sala_id=sala["id"],
-                    data=data_iso,
-                    hora_inicio=inicio_txt,
-                    hora_fim=fim_txt,
-                )
-
-                if conflitos:
-                    conflitos_por_sala[str(sala["id"])] = conflitos
-
-            st.session_state.resultado_busca = salas_encontradas
-            st.session_state.busca_conflitos_por_sala = conflitos_por_sala
+        st.session_state.resultado_busca = None
+        try:
+            validar_periodo_reserva(*criterios[:3])
+            reservas = listar_reservas_ativas_para_busca(usuario)
+        except Exception as erro:
+            st.error(f"Não foi possível consultar a disponibilidade: {erro}")
+            return
+        salas = [
+            sala for sala in st.session_state.get("salas", [])
+            if sala["capacidade"] >= pessoas
+            and criterios[4] in (sala.get("andar") or "").casefold()
+            and all(sala.get(recurso) for recurso in recursos)
+        ]
+        st.session_state.busca_data_iso = criterios[0]
+        st.session_state.busca_hora_inicio = criterios[1]
+        st.session_state.busca_hora_fim = criterios[2]
+        st.session_state.busca_necessita_equipamentos = equipamentos
+        st.session_state.busca_evento_institucional = evento
+        st.session_state.busca_conflitos_por_sala = {
+            str(sala["id"]): buscar_conflitos(
+                reservas, sala["id"], *criterios[:3]
+            ) for sala in salas
+        }
+        st.session_state.resultado_busca = salas
 
     resultado = st.session_state.get("resultado_busca")
-
-    if resultado is not None:
-        if resultado:
-            conflitos_por_sala = st.session_state.get(
-                "busca_conflitos_por_sala",
-                {},
-            )
-
-            if conflitos_por_sala:
-                st.warning(
-                    "Algumas salas têm pedidos que se sobrepõem a esse "
-                    "horário. Você ainda pode enviar o pedido; ele será "
-                    "sinalizado para análise do administrador."
-                )
-
-            st.success(
-                f"Encontramos {len(resultado)} sala(s) "
-                "com a capacidade selecionada."
-            )
-            colunas = st.columns(3)
-
-            for indice, sala in enumerate(resultado):
-                if str(sala["id"]) in conflitos_por_sala:
-                    st.warning(
-                        f"A sala {sala['nome']} tem conflito de horário. "
-                        "O administrador precisará analisar o pedido."
-                    )
-
-                render_sala_card(
-                    sala=sala,
-                    coluna=colunas[indice % 3],
-                    contexto="busca",
-                    usuario_atual=usuario,
-                )
-        else:
-            st.warning(
-                "Nenhuma sala atende à capacidade selecionada."
-            )
+    if resultado is None:
+        return
+    if not resultado:
+        st.info("Nenhuma sala atende aos filtros selecionados.")
+        return
+    st.success(f"Encontramos {len(resultado)} sala(s) com as características selecionadas.")
+    st.caption("Pedidos com conflito podem ser enviados para análise; somente horários livres podem ser aprovados.")
+    colunas = st.columns(3)
+    for indice, sala in enumerate(resultado):
+        coluna = colunas[indice % 3]
+        with coluna:
+            if st.session_state.get("busca_conflitos_por_sala", {}).get(str(sala["id"])):
+                st.warning("Há pedido ou reserva neste período. Sujeito à análise.")
+        render_sala_card(sala, coluna, "busca", usuario)
 
 
 def pagina_minhas_reservas(usuario):
@@ -397,6 +322,9 @@ def pagina_minhas_reservas(usuario):
 
 def pagina_favoritos(usuario):
     exigir_tipo(usuario, [TIPO_LOCATARIO])
+    aviso = st.session_state.pop("aviso_pedido", None)
+    if aviso:
+        st.success(aviso)
 
     st.markdown(
         '<div class="page-intro">'
@@ -410,7 +338,7 @@ def pagina_favoritos(usuario):
     favoritas = [
         sala
         for sala in st.session_state.get("salas", [])
-        if sala.get("id") in favoritos_ids
+        if str(sala.get("id")) in favoritos_ids
     ]
 
     if not favoritas:
@@ -462,7 +390,8 @@ def pagina_perfil(usuario):
     try:
         total_reservas = len(listar_reservas_usuario(usuario))
     except Exception:
-        total_reservas = 0
+        st.error("Não foi possível consultar sua atividade. Atualize a página.")
+        return
 
     total_favoritos = len(
         st.session_state.get("favoritos", set())
@@ -514,13 +443,17 @@ def pagina_dashboard_proprietario(usuario):
         "Acompanhe suas salas e os pedidos recebidos.",
     )
 
-    minhas_salas = salas_de(usuario["login"])
+    minhas_salas = (
+        st.session_state.get("salas", [])
+        if usuario.get("tipo") == TIPO_ADMIN
+        else salas_de(usuario["login"])
+    )
 
     try:
         reservas_recebidas = listar_reservas_usuario(usuario)
     except Exception as erro:
         st.error(f"Não foi possível carregar os pedidos: {erro}")
-        reservas_recebidas = []
+        return
 
     pendentes = [
         reserva
@@ -658,7 +591,11 @@ def pagina_minhas_salas(usuario):
         unsafe_allow_html=True,
     )
 
-    minhas_salas = salas_de(usuario["login"])
+    minhas_salas = (
+        st.session_state.get("salas", [])
+        if usuario.get("tipo") == TIPO_ADMIN
+        else salas_de(usuario["login"])
+    )
 
     st.markdown(
         '<div class="dashboard-section-title">Salas cadastradas</div>'
@@ -873,6 +810,7 @@ PAGINAS_LOCATARIO = {
 }
 
 PAGINAS_PROPRIETARIO = {
+    "Mapa do Campus": pagina_mapa_campus,
     "Dashboard": pagina_dashboard_proprietario,
     "Minhas Salas": pagina_minhas_salas,
     "Pedidos de Reserva": pagina_pedidos_proprietario,
@@ -906,3 +844,4 @@ def render_pagina(pagina, usuario):
     )
     funcao = paginas.get(pagina, next(iter(paginas.values())))
     funcao(usuario)
+

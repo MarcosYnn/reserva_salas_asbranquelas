@@ -1,5 +1,8 @@
-streamlit
-python-dotenv
-firebase-admin
-requests
-Pillow
+streamlit==1.67.0
+python-dotenv==1.2.4
+firebase-admin==7.8.0
+google-cloud-firestore==2.34.1
+requests==2.34.2
+Pillow==13.0.0
+tzdata==2026.6
+

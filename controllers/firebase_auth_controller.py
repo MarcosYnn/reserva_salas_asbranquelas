@@ -124,6 +124,9 @@ def autenticar_usuario_firebase(usuario, senha):
             clock_skew_seconds=5,
         )
 
+        if perfil_usuario.get("uid") != uid:
+            return False, "O perfil não corresponde à conta autenticada."
+
         if token_verificado.get("uid") != uid:
             return False, "O UID do token não corresponde à conta."
     except Exception as erro:
@@ -133,6 +136,9 @@ def autenticar_usuario_firebase(usuario, senha):
 
     nome = perfil_usuario.get("nome") or usuario
 
+    from utils.sessao import limpar_dados_usuario
+
+    limpar_dados_usuario()
     st.session_state.usuario = {
         "id": uid,
         "login": usuario,
