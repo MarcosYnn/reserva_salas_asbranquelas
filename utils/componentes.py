@@ -470,7 +470,8 @@ def render_lista_reservas(
                 st.warning(status)
 
 
-def _enviar_pedido(usuario, sala, data, inicio, fim, equipamentos=False, evento=False):
+def _enviar_pedido(usuario, sala, data, inicio, fim, equipamentos=False, evento=False,
+                   finalidade=""):
     try:
         criar_pedido_reserva(
             usuario_atual=usuario,
@@ -480,6 +481,7 @@ def _enviar_pedido(usuario, sala, data, inicio, fim, equipamentos=False, evento=
             hora_fim=fim,
             necessita_equipamentos=equipamentos,
             evento_institucional=evento,
+            finalidade=finalidade,
         )
     except Exception as erro:
         st.error(f"Não foi possível criar o pedido: {erro}")
@@ -489,7 +491,7 @@ def _enviar_pedido(usuario, sala, data, inicio, fim, equipamentos=False, evento=
     st.rerun()
 
 
-def render_sala_card(sala, coluna, contexto, usuario_atual):
+def render_sala_card(sala, coluna, contexto, usuario_atual, finalidade=""):
     from datetime import time
     from controllers.favorito_controller import definir_favorito
     from utils.relogio import hoje_local
@@ -516,11 +518,17 @@ def render_sala_card(sala, coluna, contexto, usuario_atual):
                         fim = st.time_input("Horário final", value=time(10), key=f"fim_{chave}")
                         equipamentos = st.checkbox("Precisa de equipamentos especiais", key=f"equip_{chave}")
                         evento = st.checkbox("Evento institucional", key=f"evento_{chave}")
+                        finalidade = st.text_area(
+                            "Finalidade da reserva (opcional)",
+                            max_chars=reserva_model.LIMITE_FINALIDADE,
+                            key=f"finalidade_{chave}",
+                            help="Ex.: aula, reunião ou apresentação. Até 500 caracteres.",
+                        )
                         confirmar = st.form_submit_button("Confirmar pedido", type="primary")
                     if confirmar:
                         _enviar_pedido(usuario_atual, sala, data.isoformat(),
                                        inicio.strftime("%H:%M"), fim.strftime("%H:%M"),
-                                       equipamentos, evento)
+                                       equipamentos, evento, finalidade=finalidade)
             else:
                 data = st.session_state.get("busca_data_iso")
                 inicio = st.session_state.get("busca_hora_inicio")
@@ -532,6 +540,7 @@ def render_sala_card(sala, coluna, contexto, usuario_atual):
                         usuario_atual, sala, data, inicio, fim,
                         st.session_state.get("busca_necessita_equipamentos", False),
                         st.session_state.get("busca_evento_institucional", False),
+                        finalidade=finalidade,
                     )
 
             if st.button("Remover favorito" if favoritada else "♡ Favoritar",

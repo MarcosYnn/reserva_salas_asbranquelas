@@ -38,6 +38,9 @@ def _mostrar_reserva(reserva, mostrar_revisao_admin=False):
         f"às {reserva.get('hora_fim', '—')}"
     )
     st.write(f"**Status:** {reserva.get('status', '—')}")
+    st.write("**Finalidade:**")
+    # Conteúdo do usuário como texto simples, sem interpretar Markdown/HTML.
+    st.text(reserva.get("finalidade") or "Não informada")
 
     if not mostrar_revisao_admin:
         return
