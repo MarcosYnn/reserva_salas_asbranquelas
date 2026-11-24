@@ -2,11 +2,11 @@
 
 Projeto acadêmico da equipe **As Branquelas**, desenvolvido na disciplina de **Engenharia de Software**, para consultar espaços, acompanhar reservas e gerenciar salas e contas.
 
-> **2ª etapa — finalidade da reserva em 20/11/2026:** esta branch parte da `main` [c6bd29b](https://github.com/MarcosYnn/reserva_salas_asbranquelas/commit/c6bd29bb0af3beefa64932648e2dc5fd19cee488), com a revisão final do PR #15 já integrada. O locatário pode informar finalidade opcional de até 500 caracteres pela busca ou pelos Favoritos; o texto é persistido e aparece nos detalhes dos três perfis, mantendo a compatibilidade com reservas antigas. A suíte local passou com **87 testes e seis subtestes**, usando dependências reais, armazenamento simulado e AppTest do Streamlit. A homologação com Firebase e celular continua pendente. Consulte [a implementação da finalidade](docs/finalidade-reserva.md) e [a revisão anterior](docs/implementacao-revisao-final.md).
+> **Validação em 20/11/2026:** os PRs #15 e #16 estão integrados à `main` `4899dd9`. A suíte passou com **87 testes e seis subtestes**, usando armazenamento simulado e AppTest. Na aplicação publicada, foram confirmados pedidos com e sem finalidade, duplicidade, cancelamento, isolamento das consultas entre dois locatários, formulário próprio dos Favoritos, aprovação sequencial de conflitos e atualização do calendário. **Concorrência simultânea no Firebase, perfil Proprietário e celular continuam pendentes.** Consulte [o registro da validação integrada](docs/validacao-integrada-2026-11-20.md), [a finalidade](docs/finalidade-reserva.md) e [a implementação da revisão](docs/implementacao-revisao-final.md).
 
 ## Problema
 
-O gerenciamento manual de espaços dificulta a consulta de capacidade, localização, recursos e horários. A proposta busca centralizar essas informações e reduzir conflitos e duplicidades de reservas. A exclusividade na aprovação é verificada em transação, com coordenação pelo documento da sala; a validação com Firebase configurado ainda deve ser registrada.
+O gerenciamento manual de espaços dificulta a consulta de capacidade, localização, recursos e horários. A proposta busca centralizar essas informações e reduzir conflitos e duplicidades de reservas. A exclusividade na aprovação é verificada em transação, com coordenação pelo documento da sala; o bloqueio sequencial de aprovação conflitante foi observado no Firebase; a disputa simultânea ainda precisa ser validada.
 
 ## Público-alvo
 
@@ -42,7 +42,7 @@ O fluxo grava pedidos pendentes no Firestore, sujeitos à decisão administrativ
 | Perfis e navegação | Implementado no código | Reconsulta status/perfil no Firestore e conta no Auth antes das ações protegidas; mudanças afetam a próxima interação |
 | Salas | Parcial | Cadastro, edição e exclusão autorizada no Firestore; exclusão bloqueada quando há pedidos pendentes ou aprovados; manutenção ainda pendente |
 | Busca | Implementado no código | Período válido, capacidade, localização e recursos; filtros alterados invalidam resultados anteriores; sobreposições sinalizadas para análise |
-| Reservas | Implementado no código | Pedidos no Firestore por UID; duplicação ativa impedida; aprovação coordenada por sala e sem sobreposição; homologação Firebase pendente |
+| Reservas | Implementado no código | Pedidos no Firestore por UID; duplicação ativa impedida; aprovação coordenada por sala e sem sobreposição; bloqueio sequencial e persistência validados no Firebase; concorrência simultânea pendente |
 | Cancelamento | Implementado no código | Locatário cancela pedidos próprios com titularidade conferida na transação; administrador cancela; período volta a permitir aprovação |
 | Favoritos | Implementado no código | Persistência em usuarios/{uid}/favoritos/{sala_id}; reserva exige data/início/fim no próprio formulário |
 | Dashboard | Implementado no código | Próxima reserva considera apenas aprovada com início futuro; erros de carga interrompem indicadores; relógio institucional explícito |
@@ -544,7 +544,7 @@ A tela atual não oferece cadastro público, confirmação de e-mail nem recuper
 | Permissões no servidor | Controllers verificam perfil, titularidade dos pedidos e vínculo das salas. O Admin SDK exige cuidado especial, pois opera com permissões da conta de serviço. |
 | Administração | Restrições à alteração e exclusão da própria conta e à remoção do último administrador ativo. |
 
-Vínculo do UID e revalidação de status/perfil foram implementados. As reservas agora coordenam criação, aprovação, cancelamento e exclusão da sala por transação. Permanecem necessárias a homologação com Firebase, a revisão dos privilégios da conta de serviço e a proteção concorrente do último administrador. Não foi realizada auditoria de segurança completa.
+Vínculo do UID e revalidação de status/perfil foram implementados. As reservas agora coordenam criação, aprovação, cancelamento e exclusão da sala por transação. A homologação com Firebase é parcial; permanecem pendentes os cenários de segurança e concorrência descritos no registro integrado, a revisão dos privilégios da conta de serviço e a proteção concorrente do último administrador. Não foi realizada auditoria de segurança completa.
 
 ## Como executar o projeto
 
@@ -653,18 +653,18 @@ Acesse o endereço exibido no terminal, normalmente `http://localhost:8501`.
 
 ## Revisão do código — 20/11/2026
 
-Os identificadores originais foram preservados para rastreabilidade; as situações abaixo refletem leitura de código, não aprovação dos testes.
+Os identificadores originais foram preservados para rastreabilidade. A tabela resume a implementação e os testes locais; resultados do serviço real e limites estão no [registro integrado](docs/validacao-integrada-2026-11-20.md).
 
 | ID | Prioridade | Constatação e encaminhamento |
 | --- | --- | --- |
-| REV01 | Alta | Pedidos e favoritos persistidos por UID; testes locais de isolamento passaram; homologação Firebase pendente |
+| REV01 | Alta | Pedidos e favoritos por UID; consultas isoladas entre dois locatários observadas na aplicação; nova autenticação da mesma conta e nomes iguais ainda pendentes |
 | REV02 | Alta | Aprovação sem sobreposição e coordenação por sala implementadas; disputa simultânea passou com armazenamento simulado |
 | REV03 | Alta | Duplicação ativa impedida; aprovação revalida sala, data e horários canônicos; testes locais passaram |
 | REV04 | Alta | Favoritos possui formulário próprio de período; filtros alterados invalidam resultados da busca |
 | REV05 | Alta | Pedidos/favoritos por UID; vínculo de salas ao proprietário ainda por login, migração pendente |
 | REV06 | Alta | UID conferido; conta e perfil reconsultados antes das ações; logout limpa dados associados à conta |
 | REV07 | Média | Criação/aprovação de sala removida recusadas; exclusão com pedido ativo bloqueada atomicamente; históricos ainda devem ser homologados |
-| REV08 | Média | Cancelamento com titularidade na transação e liberação de período; teste local aprovado |
+| REV08 | Média | Cancelamento com titularidade na transação; cancelamento pelo titular e liberação para aprovação sobreposta confirmados no Firebase |
 | REV09 | Média | Próxima reserva apenas aprovada e futura; falha de carga não simula disponibilidade; fuso explícito |
 | REV10 | Média | Edição global pelo admin, calendário e filtros implementados; manutenção e edição de perfil pendentes |
 | REV11 | Média | 87 testes e seis subtestes locais passaram; dependências diretas fixadas, Python 3.12 e CI configurados; celular pendente |
@@ -674,32 +674,32 @@ A revisão do card **“Revisão do código”** deve vincular cada correção a
 
 ## Testes e validação
 
-Esta atualização documental foi baseada na leitura do código e do histórico de integração. **Não registra uma execução de ponta a ponta da aplicação publicada nem aprovação dos testes abaixo.** Esta branch contém testes de datas, transações concorrentes, permissões, favoritos e interface. A execução local passou; o resultado da CI remota deve ser conferido no PR.
+A validação combina a suíte automatizada da main `4899dd9` e testes manuais na aplicação publicada conectada ao projeto Firebase da equipe, em 20/11/2026. O [registro integrado](docs/validacao-integrada-2026-11-20.md) documenta passos, resultados observados, identificadores dos pedidos e limitações. A suíte simulada não certifica o serviço remoto. Não foi executada homologação completa dos 18 roteiros; **Parcial** indica que somente parte do cenário foi verificada.
 
 Utilizar contas e projeto Firebase de teste. Os casos de regressão associados às pendências devem ser repetidos após as correções.
 
 | Caso | Procedimento e resultado esperado | Resultado | Situação anterior / dependência | Evidência |
 | --- | --- | --- | --- | --- |
-| T01 | Acessar sem login: conteúdo interno e menu protegidos | Não executado | A executar | — |
-| T02 | Entrar com cada perfil e verificar somente as páginas permitidas | Não executado | A executar | — |
-| T03 | Tentar senha incorreta, conta inativa e perfil inválido: acesso recusado | Não executado | A executar | — |
-| T04 | Administrador criar, editar e excluir conta de teste; conferir Auth e Firestore | Não executado | A executar | — |
+| T01 | Acessar sem login: conteúdo interno e menu protegidos | Parcial: tela de login exibida sem menu interno | Acesso direto a todas as rotas não auditado | [Registro de execução](docs/validacao-integrada-2026-11-20.md) |
+| T02 | Entrar com cada perfil e verificar somente as páginas permitidas | Parcial: Administrador e dois Locatários acessaram os menus correspondentes | Proprietário ainda não executado | [Registro de execução](docs/validacao-integrada-2026-11-20.md) |
+| T03 | Tentar senha incorreta, conta inativa e perfil inválido: acesso recusado | Parcial: credenciais incorretas recusadas | Conta inativa e perfil inválido não executados | [Registro de execução](docs/validacao-integrada-2026-11-20.md) |
+| T04 | Administrador criar, editar e excluir conta de teste; conferir Auth e Firestore | Parcial: criação e login da nova conta de teste confirmados | Edição/exclusão ainda não executadas | [Registro de execução](docs/validacao-integrada-2026-11-20.md) |
 | T05 | Tentar alterar a própria conta e remover o último admin ativo: operação recusada | Não executado | A executar | — |
 | T06 | Cadastrar sala, abrir nova sessão e conferir persistência e vínculo do proprietário | Não executado | A executar | — |
-| T07 | Reservar e abrir outra sessão: mesma reserva e bloqueio devem estar disponíveis | Não executado | A executar: persistência implementada | — |
-| T08 | Reservar 9h–11h e tentar 10h–12h, repetir clique e disputar horário em duas sessões | Não executado | Regressão de REV02/REV03 | — |
-| T09 | Tentar término anterior/igual ao início e data passada: impedir reserva | Não executado | Regressão de REV03 | — |
-| T10 | Reservar a partir de Favoritos sem busca anterior: exigir período válido | Não executado | Regressão de REV04 | — |
-| T11 | Cancelar a própria reserva e consultar novamente a disponibilidade | Não executado | A executar: cancelamento implementado | — |
-| T12 | Usar contas de nomes iguais e alternar login/logout: dados devem ficar isolados | Não executado | Regressão de REV01/REV05 | — |
+| T07 | Reservar e abrir outra sessão: mesma reserva e bloqueio devem estar disponíveis | Parcial: documentos conferidos no Firestore e decisão vista em sessões distintas | Nova autenticação do mesmo usuário ainda pendente | [Registro de execução](docs/validacao-integrada-2026-11-20.md) |
+| T08 | Reservar 9h–11h e tentar 10h–12h, repetir clique e disputar horário em duas sessões | Parcial: duplicidade impedida e aprovação sequencial sobreposta bloqueada | Disputa simultânea no Firebase não executada | [Registro de execução](docs/validacao-integrada-2026-11-20.md) |
+| T09 | Tentar término anterior/igual ao início e data passada: impedir reserva | Parcial: horário passado no dia atual bloqueado na busca e nos Favoritos | Término inválido e dia anterior cobertos apenas pela suíte local | [Registro de execução](docs/validacao-integrada-2026-11-20.md) |
+| T10 | Reservar a partir de Favoritos sem busca anterior: exigir período válido | Parcial: formulário próprio e pedido 22/11 09:00–10:00 | Período anterior da busca era 21/11; sessão nova sem busca anterior ainda pendente | [Registro de execução](docs/validacao-integrada-2026-11-20.md) |
+| T11 | Cancelar a própria reserva e consultar novamente a disponibilidade | Aprovado: titular cancelou; horário liberou aprovação sobreposta | Ver sequência dos pedidos de 22/11 | [Registro de execução](docs/validacao-integrada-2026-11-20.md) |
+| T12 | Usar contas de nomes iguais e alternar login/logout: dados devem ficar isolados | Parcial: duas contas com UIDs e nomes distintos mantiveram consultas isoladas | Nomes iguais e alternância login/logout não executados | [Registro de execução](docs/validacao-integrada-2026-11-20.md) |
 | T13 | Exibir reserva de sala removida: tratar ausência sem interromper a página | Não executado | Regressão de REV07 | — |
 | T14 | Bloquear ou alterar perfil de conta já conectada e verificar restrição de acesso | Não executado | Regressão de REV06 | — |
 | T15 | Conferir layout, contraste e operações em computador e celular | Não executado | A executar | — |
 | T16 | Mapa: selecionar origem/destino, conferir rota por corredores, simular chegada e reiniciar | Não executado | Código integrado: regressão pendente | Relato de teste local anterior à integração; sem registro formal anexado. Repetir na versão integrada. |
 | T17 | Mapa: testar os três perfis e validar grafo | Não executado | Opções e controle de acesso implementados | — |
-| T18 | Aprovar dois pedidos sobrepostos e testar concorrência | Não executado no Firebase | Passou com armazenamento MVCC simulado; repetir no ambiente configurado | tests/test_transacoes_reservas.py |
+| T18 | Aprovar dois pedidos sobrepostos e testar concorrência | Parcial: primeira aprovação bloqueou a segunda; cancelamento liberou aprovação | Concorrência realmente simultânea no Firebase pendente | [Registro de execução](docs/validacao-integrada-2026-11-20.md) |
 
-**Resultado:** Aprovado, Reprovado ou Não executado. A coluna de evidência deve receber o link ou registro real da execução, sem credenciais ou dados pessoais. Os 18 casos ainda não possuem execução formal comprovada nesta revisão; o relato do mapa não equivale à aprovação do teste integrado.
+**Resultado:** Aprovado, Parcial, Reprovado ou Não executado. As linhas atualizadas apontam para o relato real da execução. Os casos não exercitados continuam pendentes; a simples abertura do mapa não equivale à validação de todas as rotas ou dos três perfis.
 
 Para executar os testes de datas (sem operações Firestore):
 
@@ -707,7 +707,7 @@ Para executar os testes de datas (sem operações Firestore):
 python -m unittest discover -s tests -p "test_validacao_datas_reservas.py" -v
 ~~~
 
-A regra utiliza o fuso institucional definido por `APP_TIMEZONE`, com padrão `America/Porto_Velho`. Consulte [o roteiro de validação](docs/validacao-datas-reservas.md). A suíte desta branch passou com 87 testes e seis subtestes, importando o SDK real e usando seu decorator transacional real sobre armazenamento MVCC simulado; os testes de interface usam AppTest do Streamlit. O armazenamento simulado exercita conflito de versões, repetição de transações e rollback; não certifica comportamento do serviço remoto. Os testes T01–T18 ainda precisam de homologação com Firebase.
+A regra utiliza o fuso institucional definido por `APP_TIMEZONE`, com padrão `America/Porto_Velho`. Consulte [o roteiro de validação](docs/validacao-datas-reservas.md). A suíte desta branch passou com 87 testes e seis subtestes, importando o SDK real e usando seu decorator transacional real sobre armazenamento MVCC simulado; os testes de interface usam AppTest do Streamlit. O armazenamento simulado exercita conflito de versões, repetição de transações e rollback; não certifica comportamento do serviço remoto. A cobertura parcial dos roteiros T01–T18 no Firebase está registrada na tabela acima.
 
 Para executar toda a suíte, sem secrets:
 
@@ -757,7 +757,7 @@ Revisões e documentação são contribuições úteis, mas não substituem a ex
 | Documentação | Seções atualizadas |
 | Pendências | Limites e dependências ainda não concluídos |
 
-O card **“Revisão do código”** tem a revisão registrada nesta documentação; as correções continuam pendentes até serem implementadas e validadas. O estado do quadro PraxiLab deve ser atualizado pelos responsáveis.
+As correções dos PRs #15 e #16 estão integradas. Os cards **“Revisão do código”** e **“Testes integrados e validação da entrega final”** receberam os resultados observados em 20/11/2026; os cenários ainda pendentes estão explícitos no registro integrado.
 
 ## Integrantes e contribuições registradas
 
@@ -798,7 +798,7 @@ Na revisão anterior, os PRs #3 e #5 estavam abertos; seus estados atuais não f
 - [Issues](https://github.com/MarcosYnn/reserva_salas_asbranquelas/issues)
 - [Pull Requests](https://github.com/MarcosYnn/reserva_salas_asbranquelas/pulls)
 
-O link da aplicação é o endereço registrado pelo projeto; sua disponibilidade e configuração não foram verificadas nesta revisão. O repositório não informa um link público do quadro PraxiLab ou um protótipo Figma para incluir aqui.
+A aplicação foi acessada e sua integração com Firestore foi verificada nos cenários descritos no registro integrado. O [quadro PraxiLab](https://praxilab.io/ui/kanban/f586ceed-a963-4b0e-b219-aec5ed784726?s=board_saved) depende de acesso à equipe.
 
 ## Implementação da revisão final
 
@@ -820,8 +820,8 @@ O campo opcional está disponível na busca e nos Favoritos, com validação no 
 
 ## Próximos passos
 
-1. Revisar e integrar o PR desta implementação, vinculando-o aos cards reais do PraxiLab.
-2. Executar T01–T18 em projeto Firebase de teste, incluindo disputa em duas sessões independentes.
+1. Revisar a atualização documental e relacionar PR e commits ao card Nova documentação.
+2. Concluir os cenários pendentes de T01–T18, incluindo Proprietário, nova autenticação e disputa realmente simultânea em sessões independentes.
 3. Homologar computador/celular e conferir mapa e calendário nos perfis correspondentes.
 4. Concluir os requisitos que permanecerem no escopo: manutenção, acessibilidade, edição de perfil e recuperação de senha.
 5. Migrar o vínculo de propriedade das salas do login para UID com planejamento para dados existentes.

@@ -62,3 +62,9 @@ Com contas e projeto Firebase de teste:
 7. Validar campos, texto longo e navegação no celular.
 
 O card deve permanecer em Revisão até a revisão do PR, integração e registro dos resultados de homologação exigidos pela equipe.
+
+## Resultados no Firebase — 20/11/2026
+
+Após a integração dos PRs #15 e #16, a aplicação publicada foi usada para criar pedidos com finalidade preenchida e vazia pela busca e um pedido com texto próprio pelos Favoritos. Os campos foram conferidos no Firestore. Uma reserva antiga sem o campo mostrou “Não informada”. Administrador e locatários consultaram os detalhes; a finalidade permaneceu após aprovação e cancelamento. Todos os pedidos de teste foram cancelados.
+
+Ainda faltam a visualização pelo Proprietário, texto longo e navegação em celular. Os limites de 500 caracteres permanecem cobertos pela suíte automatizada, sem homologação manual específica no serviço publicado. Consulte [o registro integrado](validacao-integrada-2026-11-20.md), que também distingue aprovação sequencial de concorrência simultânea.
