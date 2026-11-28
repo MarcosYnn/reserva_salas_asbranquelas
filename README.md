@@ -38,7 +38,7 @@ O fluxo grava pedidos pendentes no Firestore, sujeitos à decisão administrativ
 | --- | --- | --- |
 | Login e logout | Implementado no código | UID autenticado comparado ao UID do perfil; logout limpa navegação, filtros, favoritos e dados da conta |
 | Cadastro de contas | Implementado | Administrador cadastra usuário, nome, e-mail, senha inicial, perfil e status |
-| Administração de contas | Implementado | Listagem, edição, troca de senha, alteração de perfil/status e exclusão com confirmação; controles contra alteração da própria conta e remoção do último administrador ativo |
+| Administração de contas | Implementado | Cadastro completo em Administração; listagem, edição, alteração de perfil/status e exclusão com confirmação em Usuários cadastrados; controles contra alteração da própria conta e remoção do último administrador ativo |
 | Perfis e navegação | Implementado no código | Reconsulta status/perfil no Firestore e conta no Auth antes das ações protegidas; mudanças afetam a próxima interação |
 | Salas | Parcial | Cadastro, edição e exclusão autorizada no Firestore; exclusão bloqueada quando há pedidos pendentes ou aprovados; manutenção ainda pendente |
 | Busca | Implementado no código | Período válido, capacidade, localização e recursos; filtros alterados invalidam resultados anteriores; sobreposições sinalizadas para análise |
@@ -525,7 +525,7 @@ Para perfis antigos sem `usuario`, o modelo usa temporariamente a parte do e-mai
 | --- | --- |
 | Locatário | Mapa do Campus, Dashboard, Buscar Salas, Minhas Reservas, Calendário, Favoritos e Perfil |
 | Proprietário | Mapa do Campus, Dashboard, Minhas Salas, Pedidos de Reserva e Perfil |
-| Administrador | Painel próprio com Início, Salas, Mapa, Reservas e Administração; atalhos provisórios removidos |
+| Administrador | Painel próprio com Início, Salas, Mapa, Reservas, Usuários cadastrados e Administração; cadastro completo separado da consulta de contas |
 
 O painel administrativo reutiliza a página de salas, mostrando todas as salas ao administrador. Proprietários continuam limitados às salas vinculadas ao seu login. O cadastro de nova sala continua no dashboard do proprietário.
 
@@ -827,3 +827,4 @@ O campo opcional está disponível na busca e nos Favoritos, com validação no 
 5. Migrar o vínculo de propriedade das salas do login para UID com planejamento para dados existentes.
 6. Revisar concorrência da proteção do último administrador ativo e permissões da conta de serviço.
 7. Consolidar evidências individuais e relatório final; não marcar testes de serviço remoto como aprovados com base somente na suíte local.
+
