@@ -9,12 +9,17 @@ def mostrar_admin():
     if "admin_pagina" not in st.session_state:
         st.session_state.admin_pagina = "Início"
 
-    def navegar(pagina, secao=None):
+    # Sessões da navegação antiga guardavam a lista como uma seção do cadastro.
+    secao_antiga = st.session_state.pop("admin_secao", None)
+    if (
+        st.session_state.admin_pagina == "Administração"
+        and secao_antiga == "usuarios"
+    ):
+        st.session_state.admin_pagina = "Usuários cadastrados"
+
+    def navegar(pagina):
         st.session_state.admin_pagina = pagina
-        if secao:
-            st.session_state.admin_secao = secao
-        else:
-            st.session_state.pop("admin_secao", None)
+        st.session_state.pop("admin_secao", None)
         st.rerun()
 
     st.markdown("""
@@ -85,7 +90,14 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
 
     with st.sidebar:
         st.markdown('<div class="sidebar-brand">▦ &nbsp; Reserva de Salas<small>SISTEMA ACADÊMICO</small></div>', unsafe_allow_html=True)
-        itens = [("⌂", "Início"), ("▦", "Salas"), ("⌖", "Mapa"), ("▣", "Reservas"), ("⚙", "Administração")]
+        itens = [
+            ("⌂", "Início"),
+            ("▦", "Salas"),
+            ("⌖", "Mapa"),
+            ("▣", "Reservas"),
+            ("♙", "Usuários cadastrados"),
+            ("⚙", "Administração"),
+        ]
         if st.session_state.admin_pagina not in {pagina for _, pagina in itens}:
             st.session_state.admin_pagina = "Início"
         for icone, pagina in itens:
@@ -133,11 +145,11 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
         else:
             st.error("Usuário não encontrado. Faça login novamente.")
         return
-    if pagina == "Administração":
+    if pagina in {"Usuários cadastrados", "Administração"}:
         usuario = st.session_state.get("usuario")
         if not usuario:
             st.error("Faça login novamente.")
-        elif st.session_state.get("admin_secao") == "usuarios":
+        elif pagina == "Usuários cadastrados":
             from views.admin_usuarios_firebase import renderizar_admin_usuarios
 
             renderizar_admin_usuarios(usuario)
@@ -146,21 +158,6 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
 
             renderizar_cadastro_figma(usuario)
         return
-    if pagina != "Início":
-        
-        
-        
-        
-        st.title(pagina)
-        secao = st.session_state.get("admin_secao")
-        if secao:
-            st.info(f"Seção selecionada: {secao}. Esta funcionalidade será conectada ao projeto.")
-        else:
-            st.info("A navegação está pronta. O conteúdo será conectado às funcionalidades existentes.")
-        if st.button("← Voltar ao Início", key="admin_voltar"):
-            navegar("Início")
-        return
-
     # HTML em uma string única: evita mostrar as tags como texto na tela.
     with st.container(key="admin_hero_wrap"):
         st.markdown(
@@ -174,7 +171,7 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
         )
         with st.container(key="hero_button"):
             if st.button("Vamos começar", key="admin_comecar"):
-                navegar("Administração", "usuarios")
+                navegar("Administração")
 
     conteudo = st.container()
     with conteudo:
@@ -246,15 +243,15 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
         esquerda, direita = st.columns([2.1, 1], gap="medium")
         with esquerda:
             acoes = [
-                ("◷", "Analisar reservas", "Aprove, recuse ou cancele pedidos recebidos.", "Reservas", None),
-                ("＋", "Cadastrar usuário", "Crie uma conta e defina o perfil de acesso.", "Administração", None),
-                ("♙", "Consultar usuários", "Consulte e gerencie os usuários cadastrados.", "Administração", "usuarios"),
-                ("▦", "Gerenciar salas", "Consulte as salas cadastradas no sistema.", "Salas", None),
+                ("◷", "Analisar reservas", "Aprove, recuse ou cancele pedidos recebidos.", "Reservas"),
+                ("＋", "Cadastrar usuário", "Crie uma conta e defina o perfil de acesso.", "Administração"),
+                ("♙", "Consultar usuários", "Consulte e gerencie os usuários cadastrados.", "Usuários cadastrados"),
+                ("▦", "Gerenciar salas", "Consulte as salas cadastradas no sistema.", "Salas"),
             ]
             with st.container(key="actions"):
                 for i in range(0, len(acoes), 2):
                     cols = st.columns(2, gap="small")
-                    for col, (icone, titulo, descricao, destino, secao) in zip(cols, acoes[i:i + 2]):
+                    for col, (icone, titulo, descricao, destino) in zip(cols, acoes[i:i + 2]):
                         with col:
                             st.markdown(
                                 f'<div class="action-card"><span class="icon">{icone}</span>'
@@ -262,7 +259,7 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
                                 unsafe_allow_html=True,
                             )
                             if st.button(titulo, key=f"acao_{titulo}", use_container_width=True):
-                                navegar(destino, secao)
+                                navegar(destino)
         with direita:
             html_pendentes = '<div class="mini-panel"><h4>Fila de análise</h4>'
             if pendentes:
@@ -300,4 +297,5 @@ div.admin-hero h2, div.admin-hero h2 *, div.admin-hero h2 span {color:#ffffff !i
                     f'<span>{quantidade}</span></div>'
                 )
             st.markdown(html_status + '</div>', unsafe_allow_html=True)
+
 

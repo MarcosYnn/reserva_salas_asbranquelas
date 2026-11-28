@@ -2,7 +2,6 @@ import streamlit as st
 
 from controllers.usuario_firebase_controller import (
     atualizar_usuario_admin,
-    criar_usuario_admin,
     excluir_usuario_admin,
     listar_usuarios_admin,
 )
@@ -22,45 +21,12 @@ def _mostrar_erro(erro):
 
 
 def renderizar_admin_usuarios(usuario_atual):
-    st.markdown('<div class="titulo">Usuários Firebase</div>', unsafe_allow_html=True)
+    st.markdown('<div class="titulo">Usuários cadastrados</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="subtitulo">Gerencie contas no Firebase Auth e Firestore.</div>',
+        '<div class="subtitulo">Consulte e gerencie as contas cadastradas no sistema.</div>',
         unsafe_allow_html=True,
     )
 
-    st.subheader("Cadastrar usuário")
-
-    with st.form("form_criar_usuario", clear_on_submit=True):
-        usuario_login = st.text_input("Usuário")
-        nome = st.text_input("Nome")
-        email = st.text_input("E-mail")
-        senha = st.text_input("Senha inicial", type="password")
-        confirmar_senha = st.text_input(
-            "Confirmar senha",
-            type="password",
-        )
-        perfil = st.selectbox("Perfil", PERFIS)
-        status = st.selectbox("Status", STATUS)
-        criar = st.form_submit_button("Criar usuário", type="primary")
-
-    if criar:
-        try:
-            criar_usuario_admin(
-                usuario_atual,
-                nome,
-                email,
-                senha,
-                confirmar_senha,
-                perfil,
-                status,
-                usuario=usuario_login,
-            )
-            st.success("Usuário criado no Firebase.")
-            st.rerun()
-        except Exception as erro:
-            _mostrar_erro(erro)
-
-    st.divider()
     st.subheader("Contas cadastradas")
 
     try:
@@ -146,3 +112,4 @@ def renderizar_admin_usuarios(usuario_atual):
                     st.rerun()
                 except Exception as erro:
                     _mostrar_erro(erro)
+
